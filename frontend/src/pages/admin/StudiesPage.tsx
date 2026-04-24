@@ -22,6 +22,7 @@ import { AdminLayout } from '../../components/admin/AdminLayout';
 import { StatusChip } from '../../components/StatusChip';
 import { TableSkeleton } from '../../components/TableSkeleton';
 import { useStudies } from '../../hooks/useStudies';
+import { useUrlPagination } from '../../hooks/useUrlPagination';
 import { Study } from '../../types';
 import { CREATE_STUDY_MUTATION, UPDATE_STUDY_MUTATION } from '../../services/adminService';
 import { GET_STUDIES_QUERY } from '../../services/studyService';
@@ -216,7 +217,7 @@ function EditStudyDialog({ study, onClose }: { study: Study; onClose: () => void
 
 // ── Page ───────────────────────────────────────────────────────────────────
 export function AdminStudiesPage() {
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useUrlPagination(10);
   const { studies, total, loading, error } = useStudies(paginationModel.page + 1, paginationModel.pageSize);
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);

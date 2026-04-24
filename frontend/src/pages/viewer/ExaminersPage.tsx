@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
@@ -8,9 +8,10 @@ import { ViewerLayout } from '../../components/shared/ViewerLayout';
 import { StatusChip } from '../../components/StatusChip';
 import { TableSkeleton } from '../../components/TableSkeleton';
 import { useExaminers } from '../../hooks/useExaminers';
+import { useUrlPagination } from '../../hooks/useUrlPagination';
 
 export function ViewerExaminersPage() {
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useUrlPagination(10);
   const { examiners, total, loading, error } = useExaminers(paginationModel.page + 1, paginationModel.pageSize);
   const navigate = useNavigate();
 

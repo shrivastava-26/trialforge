@@ -213,14 +213,14 @@ export function EntityAuditHistoryPage({
       {/* Page header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
         <Tooltip title={`Back to ${backLabel}`}>
-          <IconButton size="small" onClick={() => navigate(backTo)} sx={{ color: 'text.secondary' }}>
+          <IconButton size="small" onClick={() => navigate(-1)} sx={{ color: 'text.secondary' }}>
             <ArrowBackIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Typography
           variant="body2" color="text.secondary"
           sx={{ cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
-          onClick={() => navigate(backTo)}
+          onClick={() => navigate(-1)}
         >
           {backLabel}
         </Typography>

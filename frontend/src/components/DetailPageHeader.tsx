@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { StatusChip } from './StatusChip';
 
 interface DetailPageHeaderProps {
-  backTo: string;
+  backTo: string;   // kept for the label display only
   backLabel: string;
   title: string;
   subtitle?: string;
@@ -15,15 +15,21 @@ interface DetailPageHeaderProps {
   badge?: string;
 }
 
-export function DetailPageHeader({ backTo, backLabel, title, subtitle, status, badge }: DetailPageHeaderProps) {
+export function DetailPageHeader({ backTo: _backTo, backLabel, title, subtitle, status, badge }: DetailPageHeaderProps) {
   const navigate = useNavigate();
+
+  // Always go back in browser history so the list page restores its exact
+  // pagination state (?page=N&pageSize=N) instead of resetting to page 1.
+  function goBack() {
+    navigate(-1);
+  }
 
   return (
     <Box sx={{ mb: 3 }}>
       {/* Back link */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
         <Tooltip title={`Back to ${backLabel}`}>
-          <IconButton size="small" onClick={() => navigate(backTo)} sx={{ color: 'text.secondary' }}>
+          <IconButton size="small" onClick={goBack} sx={{ color: 'text.secondary' }}>
             <ArrowBackIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -31,7 +37,7 @@ export function DetailPageHeader({ backTo, backLabel, title, subtitle, status, b
           variant="body2"
           color="text.secondary"
           sx={{ cursor: 'pointer', '&:hover': { color: 'primary.main' } }}
-          onClick={() => navigate(backTo)}
+          onClick={goBack}
         >
           {backLabel}
         </Typography>

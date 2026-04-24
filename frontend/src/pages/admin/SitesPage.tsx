@@ -22,6 +22,7 @@ import { AdminLayout } from '../../components/admin/AdminLayout';
 import { StatusChip } from '../../components/StatusChip';
 import { TableSkeleton } from '../../components/TableSkeleton';
 import { useSites } from '../../hooks/useSites';
+import { useUrlPagination } from '../../hooks/useUrlPagination';
 import { Site } from '../../types';
 import { CREATE_SITE_MUTATION, UPDATE_SITE_MUTATION } from '../../services/adminService';
 import { GET_SITES_QUERY } from '../../services/siteService';
@@ -126,7 +127,7 @@ function EditSiteDialog({ site, onClose }: { site: Site; onClose: () => void }) 
 }
 
 export function AdminSitesPage() {
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useUrlPagination(10);
   const { sites, total, loading, error } = useSites(paginationModel.page + 1, paginationModel.pageSize);
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);

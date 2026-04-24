@@ -21,6 +21,7 @@ import { AdminLayout } from '../../components/admin/AdminLayout';
 import { StatusChip } from '../../components/StatusChip';
 import { TableSkeleton } from '../../components/TableSkeleton';
 import { useExaminers } from '../../hooks/useExaminers';
+import { useUrlPagination } from '../../hooks/useUrlPagination';
 import { Examiner } from '../../types';
 import { CREATE_EXAMINER_MUTATION, UPDATE_EXAMINER_MUTATION } from '../../services/adminService';
 import { GET_EXAMINERS_QUERY } from '../../services/examinerService';
@@ -118,7 +119,7 @@ function EditExaminerDialog({ examiner, onClose }: { examiner: Examiner; onClose
 }
 
 export function AdminExaminersPage() {
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useUrlPagination(10);
   const { examiners, total, loading, error } = useExaminers(paginationModel.page + 1, paginationModel.pageSize);
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
