@@ -93,7 +93,8 @@ SNA-y2/
     │   │   ├── useExaminers.ts        # GET_EXAMINERS_QUERY(page, pageSize) → { examiners, total, loading, error }
     │   │   ├── useExaminer.ts         # GET_EXAMINER_QUERY(id) → { examiner, loading, error }
     │   │   ├── useSitesPicker.ts      # GET_SITES_PICKER_QUERY (pageSize:1000, minimal fields) for autocomplete
-    │   │   └── useExaminersPicker.ts  # GET_EXAMINERS_PICKER_QUERY (pageSize:1000, minimal fields) for autocomplete
+    │   │   ├── useExaminersPicker.ts  # GET_EXAMINERS_PICKER_QUERY (pageSize:1000, minimal fields) for autocomplete
+    │   │   └── useUrlPagination.ts    # Persists page+pageSize in URL (?page=N&pageSize=N); used by all admin list pages
     │   ├── pages/
     │   │   ├── admin/
     │   │   │   ├── DashboardPage.tsx      # AdminDashboardPage — charts + stats, uses DashboardSkeleton
@@ -130,6 +131,7 @@ SNA-y2/
     │   ├── types/index.ts           # Study (with studySites?), StudySite, Site, Examiner, AuditLog, AuthContextValue (with role)
     │   ├── utils/
     │   │   ├── apolloClient.ts      # ApolloClient with errorLink (UNAUTHENTICATED → /login, FORBIDDEN toast, INTERNAL_SERVER_ERROR toast) + httpLink
+    │   │   ├── auditDiff.ts         # FIELD_LABELS, fieldLabel(), parseJson(), diffObjects(), summaryText() — shared by AuditLogsPage + EntityAuditHistoryPage
     │   │   └── gqlErrors.ts         # parseGqlError — extracts code, message, fieldErrors from ApolloError
     │   ├── validation/
     │   │   ├── index.ts             # Re-exports all frontend schemas
@@ -260,3 +262,8 @@ Apollo errorLink:
 - Apollo errorLink deduplicates FORBIDDEN/INTERNAL_SERVER_ERROR toasts within a 3-second window
 - Admin dashboard fetches all data with `pageSize:1000`; viewer dashboard omits specialty chart
 - `DashboardSkeleton` and `DetailPageSkeleton` (configurable `infoFields` + `relatedSections`) used across all detail/dashboard pages
+- `useUrlPagination` hook persists page+pageSize in URL query params — used by all admin list pages so back button restores exact pagination state
+- `AuditLogsPage` uses MUI `Table`+`TablePagination` (not DataGrid) for accordion-style expandable rows with inline diff panels
+- `utils/auditDiff.ts` centralises `FIELD_LABELS`, `diffObjects`, `summaryText` — shared by `AuditLogsPage`, `EntityAuditHistoryPage`, and `EntityAuditLogDialog`
+- Edit dialogs disable Save button when `!isDirty` (react-hook-form `formState.isDirty`)
+- Study detail page header includes a "History" button navigating to `/admin/studies/:id/history`

@@ -13,7 +13,7 @@ SNA Demo is a full-stack clinical study management application demonstrating a m
 - Admin assignment management: assign/unassign sites to studies, assign/unassign examiners to sites, assign/unassign examiners to specific study+site pairs (3-way SSE junction)
 - Study detail page: per-site examiner assignment via checkbox panel (StudySitePanel) — shows available vs assigned examiners per site
 - Viewer study detail page: read-only per-site examiner breakdown (ViewerStudySitePanel) — only shows sites with assigned examiners
-- Audit log page — all admin CREATE/UPDATE actions recorded with before/after JSON snapshots
+- Audit log page — all admin CREATE/UPDATE actions recorded with before/after JSON snapshots; filterable by entity type; expandable inline diff rows (accordion, one at a time)
 - Per-entity audit history pages — dedicated full-page paginated change history for each Study, Site, and Examiner
 - `EntityAuditLogDialog` — inline modal showing change history for a specific entity (used from detail pages)
 - `EntityAuditHistoryPage` — full-page server-paginated audit history with expandable inline diff panels (before→after per field)

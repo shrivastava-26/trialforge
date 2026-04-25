@@ -148,13 +148,13 @@ if (code === 'BAD_USER_INPUT') {
 export function nextAllowedStatus(current: string): 'Active' | 'Completed' | null
 // Returns the one valid next status, or null if terminal (Completed)
 ```
-- Create dialog: no status field shown — displays read-only "Planned" badge
-- Edit dialog: status dropdown shows only `[current, nextAllowed]` — Completed studies have it disabled
+- Create dialog: no status field shown — displays read-only "Planned" badge; `startDate` has `min=today` HTML constraint; `endDate` min tracks `startDate` reactively via `useWatch`
+- Edit dialog: status dropdown shows only `[current, nextAllowed]` — Completed studies have it disabled; `statusHelperText()` shows transition requirements inline; `endDate` gets `max=today` when completing; Save button disabled when `!isDirty`
 - Backend is the authoritative source; UI restrictions are UX-only defence-in-depth
 
 ### Site Status UI Rules
 - Create dialog: no status field shown — displays read-only "Planned" badge (same pattern as studies)
-- Edit dialog: status dropdown available; `Active` is blocked server-side if no examiners assigned (P1); `Closed` sites have dropdown disabled
+- Edit dialog: status dropdown available; `Active` is blocked server-side if no examiners assigned (P1); `Closed` sites have dropdown disabled; Save button disabled when `!isDirty`
 - `createSite` on backend always hardcodes `'Planned'` regardless of any input
 
 ### GQL Documents in Service Files
@@ -173,6 +173,8 @@ export function useStudies(page = 1, pageSize = 10) {
 ### Admin CRUD Dialog Pattern
 ```typescript
 // react-hook-form + zodResolver + notistack + parseGqlError
+// All list pages use useUrlPagination() — persists page/pageSize in URL query params
+// Edit dialogs disable Save button when !isDirty (no changes made)
 async function onSubmit(values) {
   try {
     await mutation({ variables: { input: values } });
@@ -207,11 +209,31 @@ GET_AUDIT_LOGS_QUERY variables: { entityType?, entityId?, page?, pageSize? }
 // AuditLogsPage (global) passes no entityId; EntityAuditHistoryPage passes entityType + entityId
 ```
 
+### AuditLogsPage Pattern (Global)
+- Uses MUI `Table` + `TablePagination` (not DataGrid) for full control over expandable rows
+- Entity type filter dropdown (`Study` / `Site` / `Examiner` / All) resets page on change
+- Accordion expand: only one row open at a time (`expandedRow` state holds single id)
+- Inline `DiffDetail` rendered via `<Collapse>` in a second `<TableRow>` immediately below
+- `summaryText()` from `utils/auditDiff.ts` generates the summary column text
+- `fieldLabel()`, `parseJson()`, `diffObjects()` all imported from `utils/auditDiff.ts`
+
+### useUrlPagination Hook
+```typescript
+// hooks/useUrlPagination.ts
+export function useUrlPagination(defaultPageSize = 10): [GridPaginationModel, setter]
+// Persists page + pageSize in URL as ?page=N&pageSize=N
+// pageSize clamped to VALID_PAGE_SIZES = [10, 20, 25, 50, 100]
+// replace: true so back button skips intermediate page changes
+```
+- Used by AdminStudiesPage, AdminSitesPage, AdminExaminersPage
+- Allows browser back button to restore exact pagination state
+
 ### StudySitePanel Pattern (Admin Study Detail)
 - Per-site checkbox panel showing available examiners (from `site_examiners`) vs assigned (from `study_site_examiners`)
 - Each checkbox toggle calls `ASSIGN_EXAMINER_TO_STUDY_SITE` or `UNASSIGN_EXAMINER_FROM_STUDY_SITE`
 - `refetchQuery` passed as prop to avoid closure over stale `id`
 - Viewer equivalent (`ViewerStudySitePanel`) is read-only; only renders sites with `examiners.length > 0`
+- Study detail page header includes a "History" button linking to `/admin/studies/:id/history`
 
 ### Apollo errorLink Deduplication
 ```typescript
