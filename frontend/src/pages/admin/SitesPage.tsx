@@ -81,7 +81,7 @@ function CreateSiteDialog({ open, onClose }: { open: boolean; onClose: () => voi
 function EditSiteDialog({ site, onClose }: { site: Site; onClose: () => void }) {
   const { enqueueSnackbar } = useSnackbar();
   const [updateSite, { loading }] = useMutation(UPDATE_SITE_MUTATION, { refetchQueries: [GET_SITES_QUERY] });
-  const { register, handleSubmit, setError, formState: { errors } } = useForm<UpdateSiteFormValues>({
+  const { register, handleSubmit, setError, formState: { errors, isDirty } } = useForm<UpdateSiteFormValues>({
     resolver: zodResolver(updateSiteSchema),
     defaultValues: { name: site.name, city: site.city, country: site.country, status: site.status as UpdateSiteFormValues['status'] },
   });
@@ -120,7 +120,7 @@ function EditSiteDialog({ site, onClose }: { site: Site; onClose: () => void }) 
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={loading}>Save Changes</Button>
+        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={loading || !isDirty}>Save Changes</Button>
       </DialogActions>
     </Dialog>
   );

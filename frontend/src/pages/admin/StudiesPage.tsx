@@ -127,7 +127,7 @@ function EditStudyDialog({ study, onClose }: { study: Study; onClose: () => void
   const [updateStudy, { loading }] = useMutation(UPDATE_STUDY_MUTATION, { refetchQueries: [GET_STUDIES_QUERY] });
   const today = todayLocal();
 
-  const { register, handleSubmit, setError, control, formState: { errors } } = useForm<UpdateStudyFormValues>({
+  const { register, handleSubmit, setError, control, formState: { errors, isDirty } } = useForm<UpdateStudyFormValues>({
     resolver: zodResolver(updateStudySchema),
     defaultValues: {
       title: study.title,
@@ -209,7 +209,7 @@ function EditStudyDialog({ study, onClose }: { study: Study; onClose: () => void
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={loading}>Save Changes</Button>
+        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={loading || !isDirty}>Save Changes</Button>
       </DialogActions>
     </Dialog>
   );

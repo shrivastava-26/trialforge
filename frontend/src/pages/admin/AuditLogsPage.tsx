@@ -1,24 +1,30 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { DataGrid, GridColDef, GridPaginationModel, GridRenderCellParams } from '@mui/x-data-grid';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Chip from '@mui/material/Chip';
 import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Collapse from '@mui/material/Collapse';
+import CircularProgress from '@mui/material/CircularProgress';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { AdminLayout } from '../../components/admin/AdminLayout';
-import { TableSkeleton } from '../../components/TableSkeleton';
 import { GET_AUDIT_LOGS_QUERY } from '../../services/adminService';
 import { AuditLog } from '../../types';
 
-// ── Shared diff helpers ───────────────────────────────────────────────────
+// ── Diff helpers ──────────────────────────────────────────────────────────
 const FIELD_LABELS: Record<string, string> = {
   protocolId: 'Protocol ID', title: 'Study Name', sponsor: 'Sponsor',
   phase: 'Phase', startDate: 'Start Date', endDate: 'End Date',
@@ -52,6 +58,14 @@ function diffObjects(
   return changes;
 }
 
+function summaryText(log: AuditLog): string {
+  if (log.action === 'CREATE') return 'Record created';
+  const changes = diffObjects(parseJson(log.beforeJson), parseJson(log.afterJson));
+  if (changes.length === 0) return 'No changes';
+  return changes.map((c) => fieldLabel(c.field)).join(', ') + ' updated';
+}
+
+// ── Inline diff panel ─────────────────────────────────────────────────────
 function DiffDetail({ log }: { log: AuditLog }) {
   const before = parseJson(log.beforeJson);
   const after = parseJson(log.afterJson);
@@ -59,7 +73,7 @@ function DiffDetail({ log }: { log: AuditLog }) {
   const changes = diffObjects(before, after);
 
   return (
-    <Box sx={{ px: 3, py: 1.5, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+    <Box sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
       {isCreate && after ? (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {Object.entries(after)
@@ -76,10 +90,10 @@ function DiffDetail({ log }: { log: AuditLog }) {
             ))}
         </Box>
       ) : changes.length > 0 ? (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
           {changes.map((c) => (
             <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', minWidth: 110 }}>
+              <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', minWidth: 120 }}>
                 {fieldLabel(c.field)}
               </Typography>
               <Typography variant="caption" sx={{ px: 0.7, py: 0.15, bgcolor: '#fef2f2', color: '#b91c1c', borderRadius: 0.5, fontFamily: 'monospace', textDecoration: 'line-through' }}>
@@ -105,16 +119,14 @@ function DiffDetail({ log }: { log: AuditLog }) {
 const ENTITY_TYPES = ['', 'Study', 'Site', 'Examiner'] as const;
 
 export function AuditLogsPage() {
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 25 });
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
   const [entityTypeFilter, setEntityTypeFilter] = useState('');
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  // Accordion: only one row open at a time
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   const { data, loading, error } = useQuery(GET_AUDIT_LOGS_QUERY, {
-    variables: {
-      entityType: entityTypeFilter || undefined,
-      page: paginationModel.page + 1,
-      pageSize: paginationModel.pageSize,
-    },
+    variables: { entityType: entityTypeFilter || undefined, page: page + 1, pageSize },
     fetchPolicy: 'network-only',
   });
 
@@ -122,79 +134,19 @@ export function AuditLogsPage() {
   const total: number = data?.getAuditLogs?.total ?? 0;
 
   function toggleExpand(logId: string) {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(logId)) { next.delete(logId); } else { next.add(logId); }
-      return next;
-    });
+    setExpandedRow((prev) => (prev === logId ? null : logId));
   }
 
-  const columns: GridColDef[] = [
-    {
-      field: 'expand',
-      headerName: '',
-      width: 48,
-      sortable: false,
-      renderCell: (p: GridRenderCellParams) => (
-        <Tooltip title={expandedRows.has(String(p.row.id)) ? 'Hide changes' : 'Show changes'}>
-          <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleExpand(String(p.row.id)); }}>
-            {expandedRows.has(String(p.row.id))
-              ? <ExpandLessIcon fontSize="small" />
-              : <ExpandMoreIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-      ),
-    },
-    { field: 'createdAt', headerName: 'Timestamp', width: 170 },
-    { field: 'actorEmail', headerName: 'Changed By', width: 210 },
-    {
-      field: 'action',
-      headerName: 'Action',
-      width: 100,
-      renderCell: (p: GridRenderCellParams) => (
-        <Chip
-          label={p.value}
-          size="small"
-          color={p.value === 'CREATE' ? 'success' : 'warning'}
-          variant="outlined"
-          sx={{ fontWeight: 700, fontSize: '0.72rem' }}
-        />
-      ),
-    },
-    {
-      field: 'entityType',
-      headerName: 'Entity',
-      width: 110,
-      renderCell: (p: GridRenderCellParams) => (
-        <Chip label={p.value} size="small" variant="outlined" sx={{ fontSize: '0.72rem' }} />
-      ),
-    },
-    { field: 'entityId', headerName: 'ID', width: 70 },
-    {
-      field: 'summary',
-      headerName: 'Summary',
-      flex: 1,
-      minWidth: 180,
-      sortable: false,
-      renderCell: (p: GridRenderCellParams) => {
-        const log = p.row as AuditLog;
-        const before = parseJson(log.beforeJson);
-        const after = parseJson(log.afterJson);
-        if (log.action === 'CREATE') {
-          return <Typography variant="caption" color="text.secondary">Record created</Typography>;
-        }
-        const changes = diffObjects(before, after);
-        if (changes.length === 0) {
-          return <Typography variant="caption" color="text.disabled">No changes</Typography>;
-        }
-        return (
-          <Typography variant="caption" color="text.secondary">
-            {changes.map((c) => fieldLabel(c.field)).join(', ')} updated
-          </Typography>
-        );
-      },
-    },
-  ];
+  function handlePageChange(_: unknown, newPage: number) {
+    setPage(newPage);
+    setExpandedRow(null);
+  }
+
+  function handlePageSizeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setPageSize(Number(e.target.value));
+    setPage(0);
+    setExpandedRow(null);
+  }
 
   return (
     <AdminLayout>
@@ -202,15 +154,15 @@ export function AuditLogsPage() {
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 700 }}>Audit Logs</Typography>
           <Typography variant="body2" color="text.secondary">
-            All admin create and update actions. Click ▼ on any row to see what changed.
+            All admin create and update actions. Click any row to see what changed.
           </Typography>
         </Box>
         <TextField
           select size="small" label="Filter by entity" value={entityTypeFilter}
           onChange={(e) => {
             setEntityTypeFilter(e.target.value);
-            setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
-            setExpandedRows(new Set());
+            setPage(0);
+            setExpandedRow(null);
           }}
           sx={{ minWidth: 160 }}
         >
@@ -220,38 +172,109 @@ export function AuditLogsPage() {
         </TextField>
       </Box>
 
-      {loading && <TableSkeleton />}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress size={28} />
+        </Box>
+      )}
       {error && <Alert severity="error">{error.message}</Alert>}
 
       {!loading && !error && (
         <Paper elevation={0} sx={{ borderRadius: 2, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            rowCount={total}
-            paginationMode="server"
-            paginationModel={paginationModel}
-            onPaginationModelChange={(model) => {
-              setPaginationModel(model);
-              setExpandedRows(new Set());
-            }}
-            pageSizeOptions={[10, 25, 50, 100]}
-            autoHeight
-            disableRowSelectionOnClick
-            sx={{
-              border: 'none',
-              '& .MuiDataGrid-columnHeader': { bgcolor: '#f8fafc', fontWeight: 700 },
-              '& .MuiDataGrid-row:hover': { bgcolor: '#f0fdfa' },
-            }}
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                  <TableCell sx={{ width: 48, p: 0 }} />
+                  <TableCell sx={{ fontWeight: 700, width: 170 }}>Timestamp</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 210 }}>Changed By</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 100 }}>Action</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 110 }}>Entity</TableCell>
+                  <TableCell sx={{ fontWeight: 700, width: 60 }}>ID</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Summary</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4, color: 'text.disabled' }}>
+                      No audit log entries found.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {rows.map((log) => {
+                  const isOpen = expandedRow === String(log.id);
+                  return (
+                    <>
+                      {/* ── Data row ── */}
+                      <TableRow
+                        key={log.id}
+                        hover
+                        sx={{
+                          cursor: 'pointer',
+                          bgcolor: isOpen ? '#f0fdfa' : undefined,
+                          '& td': { borderBottom: isOpen ? 'none' : undefined },
+                        }}
+                        onClick={() => toggleExpand(String(log.id))}
+                      >
+                        <TableCell sx={{ p: 0, textAlign: 'center' }}>
+                          <Tooltip title={isOpen ? 'Hide changes' : 'Show changes'}>
+                            <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleExpand(String(log.id)); }}>
+                              {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption" color="text.secondary">{log.createdAt}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption" color="text.secondary">{log.actorEmail}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={log.action}
+                            size="small"
+                            color={log.action === 'CREATE' ? 'success' : 'warning'}
+                            variant="outlined"
+                            sx={{ fontWeight: 700, fontSize: '0.72rem' }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={log.entityType} size="small" variant="outlined" sx={{ fontSize: '0.72rem' }} />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption" color="text.secondary">#{log.entityId}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption" color="text.secondary">{summaryText(log)}</Typography>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* ── Inline diff row — immediately below the data row ── */}
+                      <TableRow key={`diff-${log.id}`}>
+                        <TableCell colSpan={7} sx={{ p: 0, border: 'none' }}>
+                          <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                            <DiffDetail log={log} />
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            component="div"
+            count={total}
+            page={page}
+            rowsPerPage={pageSize}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handlePageSizeChange}
+            sx={{ borderTop: '1px solid #e2e8f0' }}
           />
-          {/* Expandable diff panels rendered below each expanded row */}
-          {rows.map((log) =>
-            expandedRows.has(String(log.id)) ? (
-              <Collapse key={`diff-${log.id}`} in timeout="auto">
-                <DiffDetail log={log} />
-              </Collapse>
-            ) : null
-          )}
         </Paper>
       )}
     </AdminLayout>

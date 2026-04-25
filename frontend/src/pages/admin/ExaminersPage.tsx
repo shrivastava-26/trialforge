@@ -78,7 +78,7 @@ function CreateExaminerDialog({ open, onClose }: { open: boolean; onClose: () =>
 function EditExaminerDialog({ examiner, onClose }: { examiner: Examiner; onClose: () => void }) {
   const { enqueueSnackbar } = useSnackbar();
   const [updateExaminer, { loading }] = useMutation(UPDATE_EXAMINER_MUTATION, { refetchQueries: [GET_EXAMINERS_QUERY] });
-  const { register, handleSubmit, setError, formState: { errors } } = useForm<UpdateExaminerFormValues>({
+  const { register, handleSubmit, setError, formState: { errors, isDirty } } = useForm<UpdateExaminerFormValues>({
     resolver: zodResolver(updateExaminerSchema),
     defaultValues: { name: examiner.name, specialty: examiner.specialty, email: examiner.email, role: examiner.role as UpdateExaminerFormValues['role'], status: examiner.status },
   });
@@ -112,7 +112,7 @@ function EditExaminerDialog({ examiner, onClose }: { examiner: Examiner; onClose
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={loading}>Save Changes</Button>
+        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={loading || !isDirty}>Save Changes</Button>
       </DialogActions>
     </Dialog>
   );
