@@ -32,7 +32,7 @@ export const pickerPaginationSchema = z.object({
 });
 
 export const searchSchema = z.object({
-  keyword: z.string().min(1, 'Keyword is required').max(200),
+  keyword: z.string().min(2, 'Keyword must be at least 2 characters').max(200),
   filters: z
     .object({
       entityType: z.enum(['Study', 'Site', 'Examiner']).optional(),

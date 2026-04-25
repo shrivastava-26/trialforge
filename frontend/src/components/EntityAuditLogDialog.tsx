@@ -15,73 +15,16 @@ import PersonIcon from '@mui/icons-material/Person';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { GET_AUDIT_LOGS_QUERY } from '../services/adminService';
 import { AuditLog } from '../types';
+import { fieldLabel, parseJson, diffObjects } from '../utils/auditDiff';
 
 interface EntityAuditLogDialogProps {
   open: boolean;
   onClose: () => void;
   entityType: 'Study' | 'Site' | 'Examiner';
   entityId: number;
-  entityLabel: string; // e.g. "STUDY-001" or "City General Hospital"
+  entityLabel: string;
 }
 
-// ── Field label map — makes raw JSON keys human-readable ──────────────────
-const FIELD_LABELS: Record<string, string> = {
-  protocolId: 'Protocol ID',
-  title: 'Study Name',
-  sponsor: 'Sponsor',
-  phase: 'Phase',
-  startDate: 'Start Date',
-  endDate: 'End Date',
-  status: 'Status',
-  description: 'Description',
-  siteCode: 'Site Code',
-  name: 'Name',
-  city: 'City',
-  country: 'Country',
-  examinerCode: 'Examiner Code',
-  specialty: 'Specialty',
-  email: 'Email',
-  role: 'Role',
-};
-
-function label(key: string): string {
-  return FIELD_LABELS[key] ?? key;
-}
-
-// ── Parse JSON safely ─────────────────────────────────────────────────────
-function parseJson(raw: string | null): Record<string, unknown> | null {
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
-}
-
-// ── Compute changed fields between before and after ───────────────────────
-interface FieldChange {
-  field: string;
-  before: string;
-  after: string;
-}
-
-function diffObjects(
-  before: Record<string, unknown> | null,
-  after: Record<string, unknown> | null
-): FieldChange[] {
-  if (!after) return [];
-  const keys = new Set([...Object.keys(before ?? {}), ...Object.keys(after)]);
-  // Skip internal DB fields
-  const skip = new Set(['id', 'password']);
-  const changes: FieldChange[] = [];
-  for (const key of keys) {
-    if (skip.has(key)) continue;
-    const bVal = String(before?.[key] ?? '');
-    const aVal = String(after[key] ?? '');
-    if (bVal !== aVal) {
-      changes.push({ field: key, before: bVal, after: aVal });
-    }
-  }
-  return changes;
-}
-
-// ── Single log entry ──────────────────────────────────────────────────────
 function AuditEntry({ log }: { log: AuditLog }) {
   const before = parseJson(log.beforeJson);
   const after = parseJson(log.afterJson);
@@ -90,7 +33,6 @@ function AuditEntry({ log }: { log: AuditLog }) {
 
   return (
     <Box sx={{ mb: 2.5 }}>
-      {/* Header row */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
         <Chip
           label={log.action}
@@ -109,45 +51,33 @@ function AuditEntry({ log }: { log: AuditLog }) {
         </Box>
       </Box>
 
-      {/* Changes */}
       {isCreate && after ? (
-        // CREATE: show all fields from afterJson
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           {Object.entries(after)
             .filter(([k]) => !['id', 'password'].includes(k))
             .map(([k, v]) => (
               <Box key={k} sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
                 <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', minWidth: 120 }}>
-                  {label(k)}
+                  {fieldLabel(k)}
                 </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{ px: 0.8, py: 0.2, bgcolor: '#f0fdf4', color: '#15803d', borderRadius: 0.5, fontFamily: 'monospace' }}
-                >
+                <Typography variant="caption" sx={{ px: 0.8, py: 0.2, bgcolor: '#f0fdf4', color: '#15803d', borderRadius: 0.5, fontFamily: 'monospace' }}>
                   {String(v ?? '—')}
                 </Typography>
               </Box>
             ))}
         </Box>
       ) : changes.length > 0 ? (
-        // UPDATE: show only changed fields with before → after
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
           {changes.map((c) => (
             <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', minWidth: 120 }}>
-                {label(c.field)}
+                {fieldLabel(c.field)}
               </Typography>
-              <Typography
-                variant="caption"
-                sx={{ px: 0.8, py: 0.2, bgcolor: '#fef2f2', color: '#b91c1c', borderRadius: 0.5, fontFamily: 'monospace', textDecoration: 'line-through' }}
-              >
+              <Typography variant="caption" sx={{ px: 0.8, py: 0.2, bgcolor: '#fef2f2', color: '#b91c1c', borderRadius: 0.5, fontFamily: 'monospace', textDecoration: 'line-through' }}>
                 {c.before || '—'}
               </Typography>
               <Typography variant="caption" color="text.disabled">→</Typography>
-              <Typography
-                variant="caption"
-                sx={{ px: 0.8, py: 0.2, bgcolor: '#f0fdf4', color: '#15803d', borderRadius: 0.5, fontFamily: 'monospace' }}
-              >
+              <Typography variant="caption" sx={{ px: 0.8, py: 0.2, bgcolor: '#f0fdf4', color: '#15803d', borderRadius: 0.5, fontFamily: 'monospace' }}>
                 {c.after || '—'}
               </Typography>
             </Box>
@@ -162,17 +92,16 @@ function AuditEntry({ log }: { log: AuditLog }) {
   );
 }
 
-// ── Dialog ────────────────────────────────────────────────────────────────
 export function EntityAuditLogDialog({
   open, onClose, entityType, entityId, entityLabel,
 }: EntityAuditLogDialogProps) {
   const { data, loading, error } = useQuery(GET_AUDIT_LOGS_QUERY, {
-    variables: { entityType, entityId, limit: 100 },
+    variables: { entityType, entityId, page: 1, pageSize: 100 },
     skip: !open,
     fetchPolicy: 'network-only',
   });
 
-  const logs: AuditLog[] = data?.getAuditLogs ?? [];
+  const logs: AuditLog[] = data?.getAuditLogs?.rows ?? [];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>

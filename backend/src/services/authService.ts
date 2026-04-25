@@ -13,7 +13,7 @@ export function loginUser(email: string, password: string) {
     });
   }
 
-  const token = signToken({ userId: user.id, role: user.role });
+  const token = signToken({ userId: user.id, role: user.role, email: user.email });
 
   return {
     token,

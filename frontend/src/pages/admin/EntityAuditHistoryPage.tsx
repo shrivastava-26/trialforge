@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -24,47 +24,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { GET_AUDIT_LOGS_QUERY } from '../../services/adminService';
 import { AuditLog } from '../../types';
-
-// ── Diff helpers ──────────────────────────────────────────────────────────
-const FIELD_LABELS: Record<string, string> = {
-  protocolId: 'Protocol ID', title: 'Study Name', sponsor: 'Sponsor',
-  phase: 'Phase', startDate: 'Start Date', endDate: 'End Date',
-  status: 'Status', description: 'Description',
-  siteCode: 'Site Code', name: 'Name', city: 'City', country: 'Country',
-  examinerCode: 'Examiner Code', specialty: 'Specialty', email: 'Email', role: 'Role',
-};
-function fieldLabel(key: string): string { return FIELD_LABELS[key] ?? key; }
-
-function parseJson(raw: string | null): Record<string, unknown> | null {
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
-}
-
-interface FieldChange { field: string; before: string; after: string; }
-
-function diffObjects(
-  before: Record<string, unknown> | null,
-  after: Record<string, unknown> | null
-): FieldChange[] {
-  if (!after) return [];
-  const skip = new Set(['id', 'password']);
-  const keys = new Set([...Object.keys(before ?? {}), ...Object.keys(after)]);
-  const changes: FieldChange[] = [];
-  for (const key of keys) {
-    if (skip.has(key)) continue;
-    const bVal = String(before?.[key] ?? '');
-    const aVal = String(after[key] ?? '');
-    if (bVal !== aVal) changes.push({ field: key, before: bVal, after: aVal });
-  }
-  return changes;
-}
-
-function summaryText(log: AuditLog): string {
-  if (log.action === 'CREATE') return 'Record created';
-  const changes = diffObjects(parseJson(log.beforeJson), parseJson(log.afterJson));
-  if (changes.length === 0) return 'No changes';
-  return changes.map((c) => fieldLabel(c.field)).join(', ') + ' updated';
-}
+import { fieldLabel, parseJson, diffObjects, summaryText } from '../../utils/auditDiff';
 
 // ── Inline diff panel ─────────────────────────────────────────────────────
 function DiffDetail({ log }: { log: AuditLog }) {
@@ -119,7 +79,6 @@ function DiffDetail({ log }: { log: AuditLog }) {
 // ── Props ─────────────────────────────────────────────────────────────────
 interface EntityAuditHistoryPageProps {
   entityType: 'Study' | 'Site' | 'Examiner';
-  backTo: string;
   backLabel: string;
   entityLabel?: string;
 }
@@ -127,16 +86,26 @@ interface EntityAuditHistoryPageProps {
 // ── Page ──────────────────────────────────────────────────────────────────
 export function EntityAuditHistoryPage({
   entityType,
-  backTo: _backTo,
   backLabel,
   entityLabel,
 }: EntityAuditHistoryPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Persist pagination in URL so back-navigation restores the same page
+  const page = Math.max(0, Number(searchParams.get('page') ?? 0));
+  const pageSize = Number(searchParams.get('pageSize') ?? 10);
+
   // Accordion: only one row open at a time
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  function setPage(newPage: number) {
+    setSearchParams((prev) => { const n = new URLSearchParams(prev); n.set('page', String(newPage)); return n; }, { replace: true });
+  }
+  function setPageSize(newSize: number) {
+    setSearchParams((prev) => { const n = new URLSearchParams(prev); n.set('pageSize', String(newSize)); n.set('page', '0'); return n; }, { replace: true });
+  }
 
   const { data, loading, error } = useQuery(GET_AUDIT_LOGS_QUERY, {
     variables: { entityType, entityId: Number(id), page: page + 1, pageSize },
@@ -158,7 +127,6 @@ export function EntityAuditHistoryPage({
 
   function handlePageSizeChange(e: React.ChangeEvent<HTMLInputElement>) {
     setPageSize(Number(e.target.value));
-    setPage(0);
     setExpandedRow(null);
   }
 

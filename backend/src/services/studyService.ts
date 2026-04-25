@@ -18,10 +18,6 @@ function todayUTC(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function getAllStudies(): StudyRow[] {
-  return queryAll<StudyRow>('SELECT * FROM studies ORDER BY id ASC');
-}
-
 export function getStudiesPaged(page: number, pageSize: number): { rows: StudyRow[]; total: number } {
   const offset = (page - 1) * pageSize;
   const rows = queryAll<StudyRow>('SELECT * FROM studies ORDER BY id ASC LIMIT ? OFFSET ?', [pageSize, offset]);
@@ -228,7 +224,7 @@ function enforceStatusTransition(existing: StudyRow, newStatus: string, inputDat
       }
     }
     // D6: endDate required, <= today, >= startDate
-    const endDate = inputDates.endDate ?? existing.endDate;
+    const endDate = inputDates.endDate || existing.endDate || null;
     if (!endDate) {
       throw new GraphQLError('Study must have an end date before it can be Completed.', {
         extensions: { code: 'BAD_USER_INPUT', fieldErrors: { endDate: 'End date is required to complete the study.' } },
@@ -247,6 +243,9 @@ function enforceStatusTransition(existing: StudyRow, newStatus: string, inputDat
     }
   }
 }
+
+// Permitted column names for dynamic UPDATE — prevents unexpected keys reaching SQL
+const STUDY_UPDATE_COLUMNS = new Set(['title', 'sponsor', 'phase', 'startDate', 'endDate', 'status', 'description']);
 
 export function updateStudy(id: number, input: UpdateStudyInput): StudyRow {
   const existing = getStudyById(id);
@@ -268,6 +267,10 @@ export function updateStudy(id: number, input: UpdateStudyInput): StudyRow {
 
   const fields = Object.entries(input).filter(([, v]) => v !== undefined);
   if (fields.length === 0) return existing;
+
+  // Safety: only allow known columns in the SET clause
+  const invalidKey = fields.find(([k]) => !STUDY_UPDATE_COLUMNS.has(k));
+  if (invalidKey) throw new GraphQLError('Failed to update study', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
 
   const setClauses = fields.map(([k]) => `${k} = ?`).join(', ');
   const values = fields.map(([, v]) => v);

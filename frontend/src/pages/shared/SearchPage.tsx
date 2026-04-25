@@ -18,7 +18,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import AppsIcon from '@mui/icons-material/Apps';
 import { StatusChip } from '../../components/StatusChip';
-import { GLOBAL_SEARCH_QUERY } from '../../services/adminService';
+import { GLOBAL_SEARCH_QUERY } from '../../services/searchService';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type EntityType = 'All' | 'Study' | 'Site' | 'Examiner';

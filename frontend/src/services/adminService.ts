@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-// ── Study mutations ──────────────────────────────────────────────────────
+// Study mutations
 export const CREATE_STUDY_MUTATION = gql`
   mutation CreateStudy($input: CreateStudyInput!) {
     createStudy(input: $input) { id protocolId title sponsor phase startDate endDate status description }
@@ -37,7 +37,7 @@ export const UNASSIGN_EXAMINER_FROM_STUDY_SITE = gql`
   }
 `;
 
-// ── Site mutations ───────────────────────────────────────────────────────
+// Site mutations
 export const CREATE_SITE_MUTATION = gql`
   mutation CreateSite($input: CreateSiteInput!) {
     createSite(input: $input) { id siteCode name city country status }
@@ -62,7 +62,7 @@ export const UNASSIGN_EXAMINER_FROM_SITE = gql`
   }
 `;
 
-// ── Examiner mutations ───────────────────────────────────────────────────
+// Examiner mutations
 export const CREATE_EXAMINER_MUTATION = gql`
   mutation CreateExaminer($input: CreateExaminerInput!) {
     createExaminer(input: $input) { id examinerCode name specialty email role status }
@@ -75,18 +75,9 @@ export const UPDATE_EXAMINER_MUTATION = gql`
   }
 `;
 
-// ── Search ───────────────────────────────────────────────────────────────
-export const GLOBAL_SEARCH_QUERY = gql`
-  query GlobalSearch($keyword: String!, $filters: SearchFilters) {
-    globalSearch(keyword: $keyword, filters: $filters) {
-      studies { id protocolId title sponsor phase status }
-      sites   { id siteCode name city country status }
-      examiners { id examinerCode name specialty role status }
-    }
-  }
-`;
+// Search query moved to services/searchService.ts
 
-// ── Audit logs ───────────────────────────────────────────────────────────
+// Audit logs
 export const GET_AUDIT_LOGS_QUERY = gql`
   query GetAuditLogs($entityType: String, $entityId: Int, $page: Int, $pageSize: Int) {
     getAuditLogs(entityType: $entityType, entityId: $entityId, page: $page, pageSize: $pageSize) {

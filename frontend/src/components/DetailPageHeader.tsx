@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { StatusChip } from './StatusChip';
 
 interface DetailPageHeaderProps {
-  backTo: string;   // kept for the label display only
+  backTo?: string;  // unused at runtime — navigate(-1) is always used; kept for call-site compatibility
   backLabel: string;
   title: string;
   subtitle?: string;

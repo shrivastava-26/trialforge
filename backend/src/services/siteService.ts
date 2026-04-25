@@ -3,10 +3,6 @@ import { queryAll, queryOne } from '../db/query';
 import { getDb } from '../db/connection';
 import { SiteRow, StudyRow, ExaminerRow } from '../types';
 
-export function getAllSites(): SiteRow[] {
-  return queryAll<SiteRow>('SELECT * FROM sites ORDER BY id ASC');
-}
-
 export function getSitesPaged(page: number, pageSize: number): { rows: SiteRow[]; total: number } {
   const offset = (page - 1) * pageSize;
   const rows = queryAll<SiteRow>('SELECT * FROM sites ORDER BY id ASC LIMIT ? OFFSET ?', [pageSize, offset]);
@@ -42,7 +38,7 @@ export interface CreateSiteInput {
   name: string;
   city: string;
   country: string;
-  status?: string;
+  // status intentionally absent — createSite always sets 'Planned'
 }
 
 export function createSite(input: CreateSiteInput): SiteRow {
@@ -63,6 +59,9 @@ export interface UpdateSiteInput {
   status?: string;
 }
 
+// Permitted column names for dynamic UPDATE
+const SITE_UPDATE_COLUMNS = new Set(['name', 'city', 'country', 'status']);
+
 export function updateSite(id: number, input: UpdateSiteInput): SiteRow {
   const existing = getSiteById(id);
   if (!existing) throw new GraphQLError('Site not found', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -77,6 +76,10 @@ export function updateSite(id: number, input: UpdateSiteInput): SiteRow {
 
   const fields = Object.entries(input).filter(([, v]) => v !== undefined);
   if (fields.length === 0) return existing;
+
+  // Safety: only allow known columns in the SET clause
+  const invalidKey = fields.find(([k]) => !SITE_UPDATE_COLUMNS.has(k));
+  if (invalidKey) throw new GraphQLError('Failed to update site', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
 
   const setClauses = fields.map(([k]) => `${k} = ?`).join(', ');
   const values = fields.map(([, v]) => v);

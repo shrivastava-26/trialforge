@@ -53,6 +53,7 @@ export interface AuditLogRow {
 export interface JwtPayload {
   userId: number;
   role: 'ADMIN' | 'VIEWER';
+  email: string;
 }
 
 export interface GraphQLContext {

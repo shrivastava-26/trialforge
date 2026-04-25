@@ -3,10 +3,6 @@ import { queryAll, queryOne } from '../db/query';
 import { getDb } from '../db/connection';
 import { ExaminerRow, StudyRow, SiteRow } from '../types';
 
-export function getAllExaminers(): ExaminerRow[] {
-  return queryAll<ExaminerRow>('SELECT * FROM examiners ORDER BY id ASC');
-}
-
 export function getExaminersPaged(page: number, pageSize: number): { rows: ExaminerRow[]; total: number } {
   const offset = (page - 1) * pageSize;
   const rows = queryAll<ExaminerRow>('SELECT * FROM examiners ORDER BY id ASC LIMIT ? OFFSET ?', [pageSize, offset]);
@@ -63,12 +59,19 @@ export interface UpdateExaminerInput {
   status?: string;
 }
 
+// Permitted column names for dynamic UPDATE
+const EXAMINER_UPDATE_COLUMNS = new Set(['name', 'specialty', 'email', 'role', 'status']);
+
 export function updateExaminer(id: number, input: UpdateExaminerInput): ExaminerRow {
   const existing = getExaminerById(id);
   if (!existing) throw new GraphQLError('Examiner not found', { extensions: { code: 'BAD_USER_INPUT' } });
 
   const fields = Object.entries(input).filter(([, v]) => v !== undefined);
   if (fields.length === 0) return existing;
+
+  // Safety: only allow known columns in the SET clause
+  const invalidKey = fields.find(([k]) => !EXAMINER_UPDATE_COLUMNS.has(k));
+  if (invalidKey) throw new GraphQLError('Failed to update examiner', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
 
   const setClauses = fields.map(([k]) => `${k} = ?`).join(', ');
   const values = fields.map(([, v]) => v);
