@@ -5,7 +5,7 @@ const STUDY_STATUSES = ['Planned', 'Active', 'Completed'] as const;
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-// Shared date-range refinement (format already validated per-field above)
+// Shared date-range refinement
 function refineDates(data: { startDate?: string; endDate?: string }, ctx: z.RefinementCtx) {
   if (data.startDate && data.endDate && data.startDate > data.endDate) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endDate'], message: 'End date must be on or after start date' });
@@ -15,7 +15,7 @@ function refineDates(data: { startDate?: string; endDate?: string }, ctx: z.Refi
 // createStudy:
 //   - status absent — service always sets 'Planned'
 //   - startDate required (today-check is in service)
-//   - endDate OPTIONAL (lenient rule)
+//   - endDate OPTIONAL — frontend strips empty string before sending; backend receives undefined or valid date
 export const createStudySchema = z
   .object({
     protocolId: z

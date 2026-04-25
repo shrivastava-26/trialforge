@@ -11,7 +11,8 @@ export function todayLocal(): string {
 }
 
 // createStudy: no status field — backend always creates as 'Planned'
-// endDate is optional (lenient rule)
+// endDate is optional — kept as plain string so react-hook-form errors render correctly.
+// Empty string is stripped in onSubmit before sending to the server.
 export const createStudySchema = z
   .object({
     protocolId: z
@@ -23,6 +24,7 @@ export const createStudySchema = z
     sponsor: z.string().min(1, 'Sponsor is required').max(200),
     phase: z.enum(PHASES, { message: 'Select a valid phase' }),
     startDate: z.string().min(1, 'Start date is required'),
+    // endDate is a plain optional string — no transform so errors.endDate renders correctly
     endDate: z.string().optional(),
     description: z.string().max(1000).optional(),
   })
@@ -30,7 +32,7 @@ export const createStudySchema = z
     message: 'Start date must be today or in the future',
     path: ['startDate'],
   })
-  .refine((d) => !d.startDate || !d.endDate || d.startDate <= d.endDate, {
+  .refine((d) => !d.startDate || !d.endDate || !d.endDate.trim() || d.startDate <= d.endDate, {
     message: 'End date must be on or after start date',
     path: ['endDate'],
   });
@@ -45,7 +47,7 @@ export const updateStudySchema = z
     status: z.enum(STATUSES, { message: 'Select a valid status' }),
     description: z.string().max(1000).optional(),
   })
-  .refine((d) => !d.startDate || !d.endDate || d.startDate <= d.endDate, {
+  .refine((d) => !d.startDate || !d.endDate || !d.endDate.trim() || d.startDate <= d.endDate, {
     message: 'End date must be on or after start date',
     path: ['endDate'],
   });

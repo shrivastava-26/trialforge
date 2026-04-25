@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { GraphQLContext } from '../../types';
+import { getDb } from '../../db/connection';
 
 export function requireAuth(context: GraphQLContext): void {
   if (!context.user) {
