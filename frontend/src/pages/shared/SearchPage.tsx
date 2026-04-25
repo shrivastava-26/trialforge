@@ -94,17 +94,12 @@ export function SearchPage({ layout, baseRoute }: SearchPageProps) {
     if (siteCountry)  filters.siteCountry  = siteCountry;
     if (examinerRole) filters.examinerRole = examinerRole;
 
-    // When keyword is empty we send '*' as a wildcard-style signal;
-    // the backend uses LIKE '%*%' which matches nothing useful, so instead
-    // we send a single space — actually the cleanest approach is to send
-    // a percent sign via the keyword field. But our backend requires min 1 char.
-    // We use a single space ' ' which the backend lowercases to '%  %' — matches all.
-    // Better: send keyword as empty string handled by backend with a special path.
-    // Simplest correct approach: send '%' as keyword when empty so LIKE '%%%' = match all.
+    // When keyword is empty (filter-only search), send '%%' which satisfies
+    // the backend min(2) validation and matches all records via LIKE '%%%%'.
     setSearchedKeyword(kw || '');
     runSearch({
       variables: {
-        keyword: kw || '%',
+        keyword: kw || '%%',
         filters: Object.keys(filters).length ? filters : undefined,
       },
     });
