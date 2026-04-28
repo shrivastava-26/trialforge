@@ -8,8 +8,8 @@ interface ExaminerPick {
   role: string;
 }
 
-export function useExaminersPicker() {
-  const { data, loading } = useQuery(GET_EXAMINERS_PICKER_QUERY);
+export function useExaminersPicker(skip = false) {
+  const { data, loading } = useQuery(GET_EXAMINERS_PICKER_QUERY, { skip });
   const examiners: ExaminerPick[] = data?.getExaminers?.rows ?? [];
   return { examiners, loading };
 }

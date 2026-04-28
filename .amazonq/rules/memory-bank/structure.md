@@ -10,7 +10,7 @@ SNA-y2/
 │   │   ├── app.ts               # Express + Apollo Server wiring, JWT cookie context
 │   │   ├── db/
 │   │   │   ├── connection.ts    # better-sqlite3 singleton (getDb / initConnection)
-│   │   │   ├── migrate.ts       # Schema + indexes + migration shims + seed data (2 users only)
+│   │   │   ├── migrate.ts       # Schema + indexes + migration shims + seed data (2 users + 2 examiner certificates seeded when examiners exist)
 │   │   │   └── query.ts         # Typed helpers: queryAll<T> / queryOne<T>
 │   │   ├── graphql/
 │   │   │   ├── schema/
@@ -18,7 +18,7 @@ SNA-y2/
 │   │   │   │   ├── auth.ts      # User (with role), AuthPayload, Query.me, Mutation.login/logout
 │   │   │   │   ├── study.ts     # Study, StudySite, StudyPage, CreateStudyInput, UpdateStudyInput, CRUD + SSE mutations
 │   │   │   │   ├── site.ts      # Site, SitePage, CreateSiteInput, UpdateSiteInput, CRUD + assignment mutations
-│   │   │   │   ├── examiner.ts  # Examiner (with role), ExaminerPage, CRUD mutations
+│   │   │   │   ├── examiner.ts  # Examiner (with role), ExaminerCertificate, ExaminerPage, CRUD mutations + addExaminerCertificate, updateExaminerCertificate
 │   │   │   │   ├── search.ts    # SearchResults, SearchFilters input, Query.globalSearch
 │   │   │   │   └── audit.ts     # AuditLog type, AuditLogPage, Query.getAuditLogs (supports entityType, entityTypes array, entityId)
 │   │   │   └── resolvers/
@@ -27,18 +27,18 @@ SNA-y2/
 │   │   │       ├── auth.ts      # login (with Zod), logout, me resolvers
 │   │   │       ├── study.ts     # getStudies(paged), getStudy, createStudy, updateStudy, assign/unassign site (with audit), assignExaminerToStudySite, unassignExaminerFromStudySite (with audit)
 │   │   │       ├── site.ts      # getSites(paged), getSite, createSite, updateSite, assign/unassign examiner (with audit)
-│   │   │       ├── examiner.ts  # getExaminers(paged), getExaminer, createExaminer, updateExaminer
+│   │   │       ├── examiner.ts  # getExaminers(paged), getExaminer, createExaminer, updateExaminer, addExaminerCertificate, updateExaminerCertificate (with audit)
 │   │   │       ├── search.ts    # globalSearch with keyword + SearchFilters
 │   │   │       └── audit.ts     # getAuditLogs (ADMIN only, supports entityTypes array)
 │   │   ├── services/
 │   │   │   ├── authService.ts   # loginUser (includes role in JWT), getUserById
 │   │   │   ├── studyService.ts  # getStudiesPaged, CRUD, assignSiteToStudy, unassignSiteFromStudy, getStudySitesWithStudyExaminers, assignExaminerToStudySite, unassignExaminerFromStudySite
 │   │   │   ├── siteService.ts   # getSitesPaged, CRUD (createSite always Planned, SITE_UPDATE_COLUMNS allowlist, P1/P2 rules), assignExaminerToSite, unassignExaminerFromSite
-│   │   │   ├── examinerService.ts # getExaminersPaged, CRUD, getStudiesByExaminer, getSitesByExaminer
+│   │   │   ├── examinerService.ts # getExaminersPaged, CRUD, getStudiesByExaminer, getSitesByExaminer, getCertificatesByExaminer, getCertificateById, hasValidCertificate, addExaminerCertificate, updateExaminerCertificate
 │   │   │   ├── searchService.ts # globalSearch — keyword LIKE queries across all 3 entities with filters
 │   │   │   └── auditService.ts  # getAuditLogs — supports entityType/entityTypes array, entityId, ordered DESC
 │   │   ├── types/
-│   │   │   └── index.ts         # UserRow, StudyRow, SiteRow, ExaminerRow, AuditLogRow, JwtPayload (with role + email), GraphQLContext
+│   │   │   └── index.ts         # UserRow, StudyRow, SiteRow, ExaminerRow, ExaminerCertificateRow, AuditLogRow, JwtPayload (with role + email), GraphQLContext
 │   │   ├── utils/
 │   │   │   ├── jwt.ts           # signToken / verifyToken (JWT_SECRET read lazily via getSecret())
 │   │   │   └── password.ts      # hashPassword / verifyPassword (bcryptjs, cost 10)
@@ -49,7 +49,7 @@ SNA-y2/
 │   │       ├── authSchemas.ts   # loginSchema (email + password)
 │   │       ├── studySchemas.ts  # createStudySchema, updateStudySchema (with date-range superRefine)
 │   │       ├── siteSchemas.ts   # createSiteSchema, updateSiteSchema
-│   │       ├── examinerSchemas.ts # createExaminerSchema, updateExaminerSchema
+│   │       ├── examinerSchemas.ts # createExaminerSchema, updateExaminerSchema, createCertificateSchema, updateCertificateSchema
 │   │       └── assignmentSchemas.ts # assignmentSchema, idSchema, siteExaminerSchema, studySiteExaminerSchema, paginationSchema, pickerPaginationSchema, searchSchema
 │   ├── .env                     # PORT=4040, JWT_SECRET, DB_PATH
 │   ├── package.json
@@ -99,13 +99,13 @@ SNA-y2/
     │   │   ├── admin/
     │   │   │   ├── DashboardPage.tsx      # AdminDashboardPage — charts + stats (including specialty chart), uses DashboardSkeleton
     │   │   │   ├── StudiesPage.tsx        # AdminStudiesPage — server-paginated DataGrid + CreateStudyDialog (2-step) + EditStudyDialog (2-step)
-    │   │   │   ├── StudyDetailPage.tsx    # AdminStudyDetailPage — study info + site assign/unassign + per-site examiner checkboxes (StudySitePanel) + History button
+    │   │   │   ├── StudyDetailPage.tsx    # AdminStudyDetailPage — study info + site assign/unassign + per-site examiner checkboxes (StudySitePanel with CertificatePickerDialog) + History button
     │   │   │   ├── StudyAuditHistoryPage.tsx  # Thin wrapper → EntityAuditHistoryPage for Study entity
     │   │   │   ├── SitesPage.tsx          # AdminSitesPage — server-paginated DataGrid + CreateSiteDialog (2-step) + EditSiteDialog (2-step)
     │   │   │   ├── SiteDetailPage.tsx     # AdminSiteDetailPage — site info + examiner assign/unassign autocomplete + History button
     │   │   │   ├── SiteAuditHistoryPage.tsx   # Thin wrapper → EntityAuditHistoryPage for Site entity
     │   │   │   ├── ExaminersPage.tsx      # AdminExaminersPage — server-paginated DataGrid + CreateExaminerDialog (2-step) + EditExaminerDialog (2-step)
-    │   │   │   ├── ExaminerDetailPage.tsx # AdminExaminerDetailPage — examiner info + linked studies + sites (read-only) + History button
+    │   │   │   ├── ExaminerDetailPage.tsx # AdminExaminerDetailPage — examiner info + linked studies + sites (read-only) + History button + Certificates table (Add/Edit dialogs with react-hook-form + Zod)
     │   │   │   ├── ExaminerAuditHistoryPage.tsx # Thin wrapper → EntityAuditHistoryPage for Examiner entity
     │   │   │   ├── EntityAuditHistoryPage.tsx   # Shared full-page audit history: MUI Table + TablePagination + accordion expand + URL-persisted pagination + entityTypes array
     │   │   │   ├── SearchPage.tsx         # AdminSearchPage — thin wrapper → shared SearchPage with AdminLayout
@@ -126,10 +126,10 @@ SNA-y2/
     │   │   ├── authService.ts       # ME_QUERY (includes role), LOGIN_MUTATION, LOGOUT_MUTATION
     │   │   ├── studyService.ts      # GET_STUDIES_QUERY (paginated), GET_STUDY_QUERY (with studySites/examiners/sites), GET_SITES_PICKER_QUERY
     │   │   ├── siteService.ts       # GET_SITES_QUERY (paginated), GET_SITE_QUERY (with relations), GET_EXAMINERS_PICKER_QUERY
-    │   │   ├── examinerService.ts   # GET_EXAMINERS_QUERY (paginated), GET_EXAMINER_QUERY (with studies + sites)
+    │   │   ├── examinerService.ts   # GET_EXAMINERS_QUERY (paginated), GET_EXAMINER_QUERY (with studies + sites + certificates)
     │   │   ├── searchService.ts     # GLOBAL_SEARCH_QUERY (keyword + filters → studies/sites/examiners)
-    │   │   └── adminService.ts      # All mutations (CREATE/UPDATE/ASSIGN/UNASSIGN for studies, sites, examiners, SSE), GET_AUDIT_LOGS_QUERY (supports entityTypes array)
-    │   ├── types/index.ts           # Study (with studySites?), StudySite, Site, Examiner, AuditLog, AuditLogPage, AuthContextValue (with role)
+    │   │   └── adminService.ts      # All mutations (CREATE/UPDATE/ASSIGN/UNASSIGN for studies, sites, examiners, SSE + ADD_EXAMINER_CERTIFICATE_MUTATION, UPDATE_EXAMINER_CERTIFICATE_MUTATION), GET_AUDIT_LOGS_QUERY (supports entityTypes array)
+    │   ├── types/index.ts           # Study (with studySites?), StudySite, StudySiteExaminer (with certificate?), Site, Examiner (with certificates?), ExaminerCertificate, AuditLog, AuditLogPage, AuthContextValue (with role)
     │   ├── utils/
     │   │   ├── apolloClient.ts      # ApolloClient with errorLink (UNAUTHENTICATED → /login, FORBIDDEN toast, INTERNAL_SERVER_ERROR toast) + httpLink
     │   │   ├── auditDiff.ts         # FIELD_LABELS, fieldLabel(), parseJson(), diffObjects(), summaryText() — shared by AuditLogsPage + EntityAuditHistoryPage + EntityAuditLogDialog
@@ -139,7 +139,7 @@ SNA-y2/
     │   │   ├── authSchemas.ts       # loginSchema, LoginFormValues
     │   │   ├── studySchemas.ts      # createStudySchema, updateStudySchema (date-range refine), nextAllowedStatus(), todayLocal()
     │   │   ├── siteSchemas.ts       # createSiteSchema, updateSiteSchema, nextAllowedSiteStatus()
-    │   │   └── examinerSchemas.ts   # createExaminerSchema, updateExaminerSchema
+    │   │   └── examinerSchemas.ts   # createExaminerSchema, updateExaminerSchema, createCertificateSchema, updateCertificateSchema, CreateCertificateFormValues, UpdateCertificateFormValues
     │   ├── App.tsx                  # Router: /admin/* (AdminRoute) + /viewer/* (ProtectedRoute) + legacy redirects
     │   ├── main.tsx                 # React DOM entry point (wraps with SnackbarProvider)
     │   ├── theme.ts                 # MUI theme (teal palette, borderRadius 8, Poppins font, button overrides)
@@ -190,15 +190,17 @@ sites           id, siteCode UNIQUE, name, city, country,
                 status CHECK('Planned','Active','Closed')
 examiners       id, examinerCode UNIQUE, name, specialty, email,
                 role CHECK('Principal Investigator','Sub-Investigator'), status
+examiner_certificates  id, examiner_id FK, certificateId TEXT, expiresOn TEXT, UNIQUE(examiner_id, certificateId)
 study_sites     study_id FK, site_id FK  (M:M)
 site_examiners  site_id FK, examiner_id FK  (M:M)
-study_site_examiners  study_id FK, site_id FK, examiner_id FK  (3-way junction, PK on all three, ON DELETE RESTRICT)
+study_site_examiners  study_id FK, site_id FK, examiner_id FK, certificate_id FK  (3-way junction + cert, PK on study_id+site_id+examiner_id, ON DELETE RESTRICT)
 audit_logs      id, actorUserId, actorEmail, action CHECK('CREATE','UPDATE','ASSIGN','UNASSIGN'),
                 entityType, entityId, beforeJson, afterJson, createdAt DEFAULT datetime('now')
 
 Indexes: studies(title,sponsor,status,phase), sites(name,city,country,status),
          examiners(name,role), audit_logs(actorUserId), audit_logs(entityType,entityId),
-         study_site_examiners(study_id,site_id), study_site_examiners(examiner_id)
+         study_site_examiners(study_id,site_id), study_site_examiners(examiner_id),
+         examiner_certificates(examiner_id), examiner_certificates(expiresOn)
 ```
 
 ## Data Flow
@@ -228,9 +230,14 @@ SSE Assignment (assignExaminerToStudySite):
   → ASSIGN_EXAMINER_TO_STUDY_SITE mutation
   → requireAdmin → parseOrThrow(studySiteExaminerSchema)
   → validates (study,site) in study_sites AND (site,examiner) in site_examiners AND site not Closed
-  → INSERT OR IGNORE into study_site_examiners
-  → logAudit(context, 'ASSIGN', 'StudySiteExaminer', studyId, null, {studyId, siteId, examinerId})
-  → refetchQueries([GET_STUDY_QUERY]) → StudySitePanel re-renders
+  → CertificatePickerDialog shown if examiner has ≥1 valid cert; user selects cert (or auto-selected if only one)
+  → ASSIGN_EXAMINER_TO_STUDY_SITE mutation (with optional certificateId)
+  → requireAdmin → parseOrThrow(studySiteExaminerSchema)
+  → validates (study,site) in study_sites AND (site,examiner) in site_examiners AND site not Closed
+  → resolves certificate: explicit if provided, else auto-picks latest valid cert; rejects if none valid
+  → INSERT OR IGNORE into study_site_examiners (with certificate_id)
+  → logAudit(context, 'ASSIGN', 'StudySiteExaminer', studyId, null, {studyId, siteId, examinerId, certificateId})
+  → refetchQueries([GET_STUDY_QUERY]) → StudySitePanel re-renders (shows cert info on assigned examiner)
 
 Search:
   → SearchPage keyword input → debounced 400ms → useLazyQuery(GLOBAL_SEARCH_QUERY)
@@ -258,7 +265,11 @@ Apollo errorLink:
 - Shared `SearchPage` component accepts `layout` + `baseRoute` props — reused by both Admin and Viewer
 - `logAudit` helper in `helpers.ts` called from every admin mutation resolver (CREATE, UPDATE, ASSIGN, UNASSIGN)
 - Domain rules enforced in services (e.g. site cannot be Active without examiners; auto-downgrade on last unassign)
-- `study_site_examiners` (SSE) 3-way junction: tracks which examiners participate in a study at a specific site
+- `study_site_examiners` (SSE) 3-way junction + `certificate_id`: tracks which examiners participate in a study at a specific site, linked to the certificate used at assignment time
+- `examiner_certificates` table: each examiner can have multiple certificates; `hasValidCertificate` checked before assigning to site or study; `assignExaminerToSite` and `assignExaminerToStudySite` both enforce valid cert
+- `CertificatePickerDialog` in `StudyDetailPage`: shown when assigning an examiner with ≥1 valid cert; allows explicit cert selection
+- `AdminExaminerDetailPage` has full certificate management: table showing Valid/Expired status chips, Add Certificate dialog, Edit Certificate dialog
+- Audit entity type `ExaminerCertificate` logged for `addExaminerCertificate` (CREATE) and `updateExaminerCertificate` (UPDATE)
 - `getStudySitesWithStudyExaminers` uses bulk queries + in-memory grouping to avoid N+1 for SSE data
 - `getExaminersByStudy` prefers SSE rows; falls back to `site_examiners` join for legacy/pre-SSE data
 - Apollo errorLink deduplicates FORBIDDEN/INTERNAL_SERVER_ERROR toasts within a 3-second window

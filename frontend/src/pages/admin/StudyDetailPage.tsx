@@ -274,7 +274,8 @@ export function AdminStudyDetailPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const { study, loading, error } = useStudy(id);
-  const { sites: allSites } = useSitesPicker();
+  const isCompleted = study?.status === 'Completed';
+  const { sites: allSites } = useSitesPicker(!study || isCompleted);
 
   const refetchQuery = { query: GET_STUDY_QUERY, variables: { id } };
   const refetchOptions = { refetchQueries: [refetchQuery] };
@@ -286,8 +287,6 @@ export function AdminStudyDetailPage() {
 
   const assignedSiteIds = new Set((study?.sites ?? []).map((s) => s.id));
   const unassignedSites = allSites.filter((s) => !assignedSiteIds.has(s.id));
-
-  const isCompleted = study?.status === 'Completed';
 
   async function handleAssignSite() {
     if (!selectedSite || isCompleted) return;

@@ -7,8 +7,8 @@ interface SitePick {
   name: string;
 }
 
-export function useSitesPicker() {
-  const { data, loading } = useQuery(GET_SITES_PICKER_QUERY);
+export function useSitesPicker(skip = false) {
+  const { data, loading } = useQuery(GET_SITES_PICKER_QUERY, { skip });
   const sites: SitePick[] = data?.getSites?.rows ?? [];
   return { sites, loading };
 }

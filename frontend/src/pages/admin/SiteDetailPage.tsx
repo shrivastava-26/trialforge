@@ -49,7 +49,8 @@ export function AdminSiteDetailPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const { site, loading, error } = useSite(id);
-  const { examiners: allExaminers } = useExaminersPicker();
+  const isClosed = site?.status === 'Closed';
+  const { examiners: allExaminers } = useExaminersPicker(!site || isClosed);
 
   const refetchOptions = { refetchQueries: [{ query: GET_SITE_QUERY, variables: { id } }] };
   const [assignExaminer, { loading: assigning }] = useMutation(ASSIGN_EXAMINER_TO_SITE, refetchOptions);

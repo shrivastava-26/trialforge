@@ -27,8 +27,8 @@ export const GET_SITE_QUERY = gql`
       city
       country
       status
-      studies { id protocolId title sponsor phase status }
-      examiners { id examinerCode name specialty role email status }
+      studies { id protocolId title status }
+      examiners { id examinerCode name specialty role status }
     }
   }
 `;

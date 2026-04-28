@@ -10,8 +10,9 @@ SNA Demo is a full-stack clinical study management application demonstrating a m
 - Studies, Sites, and Examiners list pages — server-side paginated MUI DataGrid tables
 - Detail pages for each entity showing related data in nested DataGrids
 - Admin CRUD: create/edit studies, sites, examiners via react-hook-form + Zod validated 2-step Stepper dialogs
-- Admin assignment management: assign/unassign sites to studies, assign/unassign examiners to sites, assign/unassign examiners to specific study+site pairs (3-way SSE junction)
-- Study detail page: per-site examiner assignment via checkbox panel (StudySitePanel) — shows available vs assigned examiners per site; Completed studies show lock banner
+- Admin assignment management: assign/unassign sites to studies, assign/unassign examiners to sites (requires valid certificate), assign/unassign examiners to specific study+site pairs (3-way SSE junction, linked to a certificate)
+- Examiner certificate management: add/edit GCP certificates per examiner with expiry tracking; Valid/Expired status shown inline; required before assigning examiner to a site or study
+- Study detail page: per-site examiner assignment via checkbox panel (StudySitePanel) — shows available vs assigned examiners per site; certificate picker dialog when assigning; assigned examiner cards show linked cert ID + expiry; Completed studies show lock banner
 - Viewer study detail page: read-only per-site examiner breakdown (ViewerStudySitePanel) — only shows sites with assigned examiners
 - Comprehensive audit logging — all admin actions (CREATE, UPDATE, ASSIGN, UNASSIGN) recorded with before/after JSON snapshots
 - Global audit log page — filterable by entity type (including junction types: StudySite, SiteExaminer, StudySiteExaminer); expandable inline diff rows (accordion, one at a time)
@@ -37,12 +38,13 @@ SNA Demo is a full-stack clinical study management application demonstrating a m
 3. Admin creates a study → audit log records the CREATE with afterJson snapshot
 4. Admin edits a study → audit log records the UPDATE with before/after JSON
 5. Admin assigns a site to a study via autocomplete picker on the study detail page → audit log records ASSIGN with StudySite entityType
-6. Admin assigns an examiner to a site; site auto-activates when first examiner is assigned
-7. Admin assigns an examiner to a study at a specific site via checkbox panel (study_site_examiners) → audit log records ASSIGN with StudySiteExaminer entityType
-8. Admin unassigns last examiner from an Active site → site auto-downgrades to Planned
-9. Search across all entities with keyword + filters; results update as you type (debounced)
-10. Admin views per-entity change history at `/admin/studies/:id/history`, `/admin/sites/:id/history`, `/admin/examiners/:id/history` — includes related junction audit entries
-11. Completed studies are locked — site and examiner assignments cannot be modified
+6. Admin adds a certificate to an examiner (certificateId + expiresOn) → audit log records CREATE with ExaminerCertificate entityType
+7. Admin assigns an examiner to a site — requires examiner has ≥1 valid (non-expired) certificate; site auto-activates when first examiner is assigned
+8. Admin assigns an examiner to a study at a specific site via checkbox panel — CertificatePickerDialog shown if multiple valid certs; certificate linked in study_site_examiners → audit log records ASSIGN with StudySiteExaminer entityType
+9. Admin unassigns last examiner from an Active site → site auto-downgrades to Planned
+10. Search across all entities with keyword + filters; results update as you type (debounced)
+11. Admin views per-entity change history at `/admin/studies/:id/history`, `/admin/sites/:id/history`, `/admin/examiners/:id/history` — includes related junction audit entries
+12. Completed studies are locked — site and examiner assignments cannot be modified
 
 ## Seeded Credentials
 | Role   | Email           | Password    |
@@ -52,6 +54,7 @@ SNA Demo is a full-stack clinical study management application demonstrating a m
 
 ## Seeded Data
 - 2 Users (ADMIN + VIEWER) — seeded automatically on first run
+- 2 Examiner certificates seeded automatically when examiners exist and no certs are present (one valid expiring next year, one expired last year — for the first two examiners by ID)
 - Studies, Sites, Examiners, and junction table links are NOT auto-seeded — the database starts empty except for users
 - Data must be created manually through the admin interface or by adding seed logic to `migrate.ts`
 

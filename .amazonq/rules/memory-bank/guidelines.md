@@ -5,7 +5,7 @@
 ### TypeScript
 - `strict: true` enforced in both packages — no implicit `any`, no loose nulls
 - Explicit return types on all exported functions
-- Interfaces over type aliases for object shapes (`UserRow`, `StudyRow`, `SiteRow`, `ExaminerRow`, `AuditLogRow`, `GraphQLContext`)
+- Interfaces over type aliases for object shapes (`UserRow`, `StudyRow`, `SiteRow`, `ExaminerRow`, `ExaminerCertificateRow`, `AuditLogRow`, `GraphQLContext`)
 - Unknown resolver parent/args typed as `_: unknown, __: unknown` to satisfy strict mode
 - `as const` used for literal type narrowing (e.g., `sameSite: 'lax' as const`)
 - Optional relation fields on frontend types use `?` (e.g., `sites?: Site[]`)
@@ -73,6 +73,7 @@ logAudit(context, 'CREATE' | 'UPDATE' | 'ASSIGN' | 'UNASSIGN', entityType, entit
 | `StudySite` | assignSiteToStudy, unassignSiteFromStudy |
 | `SiteExaminer` | assignExaminerToSite, unassignExaminerFromSite |
 | `StudySiteExaminer` | assignExaminerToStudySite, unassignExaminerFromStudySite |
+| `ExaminerCertificate` | addExaminerCertificate (CREATE), updateExaminerCertificate (UPDATE) |
 
 ### Entity Audit History — Related Entity Types
 When viewing audit history for a specific entity, the frontend queries multiple related entityTypes to show a complete picture:
@@ -153,6 +154,8 @@ if (code === 'BAD_USER_INPUT') {
 | SI3 | Cannot assign an examiner to a `Closed` site | `siteService.assignExaminerToSite` |
 | SI4 | Cannot unassign an examiner from a site if they appear in SSE for that site | `siteService.unassignExaminerFromSite` |
 | SI5 | SSE assignment requires (study,site) in `study_sites` AND (site,examiner) in `site_examiners` AND site not Closed | `studyService.assignExaminerToStudySite` |
+| SI6 | `assignExaminerToSite` requires examiner has ≥1 valid (non-expired) certificate | `siteService.assignExaminerToSite` via `hasValidCertificate()` |
+| SI7 | `assignExaminerToStudySite` requires examiner has ≥1 valid certificate; auto-selects latest if no `certificateId` provided; explicit `certificateId` validated for ownership + expiry | `studyService.assignExaminerToStudySite` |
 
 ### GraphQL Error Codes
 | Code | When to use |
@@ -267,11 +270,20 @@ export function useUrlPagination(defaultPageSize = 10): [GridPaginationModel, se
 ### StudySitePanel Pattern (Admin Study Detail)
 - Per-site checkbox panel showing available examiners (from `site_examiners`) vs assigned (from `study_site_examiners`)
 - Each checkbox toggle calls `ASSIGN_EXAMINER_TO_STUDY_SITE` or `UNASSIGN_EXAMINER_FROM_STUDY_SITE`
+- `CertificatePickerDialog` shown when assigning an examiner with ≥1 valid cert — user selects which cert to link; if no valid certs, backend rejects with `BAD_USER_INPUT`
+- Assigned examiner cards show the linked certificate ID + expiry inline
 - `refetchQuery` passed as prop to avoid closure over stale `id`
 - `readOnly` prop set to `true` for Completed studies — shows lock banner + disables checkboxes
 - Closed sites show a message instead of checkboxes
 - Viewer equivalent (`ViewerStudySitePanel`) is read-only; only renders sites with `examiners.length > 0`
 - Study detail page header includes a "History" button linking to `/admin/studies/:id/history`
+
+### Certificate Management Pattern (Admin Examiner Detail)
+- `AdminExaminerDetailPage` includes a Certificates section: MUI Table showing `certificateId`, `expiresOn`, Valid/Expired chip
+- `AddCertificateDialog`: react-hook-form + `createCertificateSchema` (frontend Zod) — fields: `certificateId`, `expiresOn` (date input)
+- `EditCertificateDialog`: react-hook-form + `updateCertificateSchema` — Save disabled when `!isDirty`
+- Both dialogs refetch `GET_EXAMINER_QUERY` on success
+- `isCertValid(expiresOn)` helper: `expiresOn >= today` (ISO date string comparison)
 
 ### Apollo errorLink Deduplication
 ```typescript
