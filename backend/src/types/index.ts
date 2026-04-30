@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Loaders } from '../graphql/loaders';
 
 export interface UserRow {
@@ -46,6 +46,16 @@ export interface ExaminerCertificateRow {
   expiresOn: string;
 }
 
+export interface RefreshTokenRow {
+  id: number;
+  user_id: number;
+  token_hash: string;
+  expires_at: string;       // ISO datetime
+  revoked_at: string | null;
+  replaced_by_token_hash: string | null;
+  created_at: string;
+}
+
 export interface AuditLogRow {
   id: number;
   actorUserId: number;
@@ -66,6 +76,7 @@ export interface JwtPayload {
 
 export interface GraphQLContext {
   user: JwtPayload | null;
+  req: Request;
   res: Response;
   requestId: string;
   loaders: Loaders;

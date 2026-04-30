@@ -102,6 +102,20 @@ export function initDb(): void {
 
     CREATE INDEX IF NOT EXISTS idx_cert_examiner   ON examiner_certificates(examiner_id);
     CREATE INDEX IF NOT EXISTS idx_cert_expires    ON examiner_certificates(expiresOn);
+
+    -- Refresh token sessions (no hard deletes; revoked_at used to invalidate)
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id                INTEGER NOT NULL REFERENCES users(id),
+      token_hash             TEXT NOT NULL UNIQUE,
+      expires_at             TEXT NOT NULL,
+      revoked_at             TEXT,
+      replaced_by_token_hash TEXT,
+      created_at             TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_rt_user_id    ON refresh_tokens(user_id);
+    CREATE INDEX IF NOT EXISTS idx_rt_token_hash ON refresh_tokens(token_hash);
   `);
 
   // Migrate existing tables — add columns that may be missing from older DB files.

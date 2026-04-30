@@ -7,8 +7,11 @@ function getSecret(): string {
   return secret;
 }
 
+/** Access token TTL — must match cookie maxAge in auth resolver. */
+export const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
 export function signToken(payload: JwtPayload): string {
-  return jwt.sign(payload, getSecret(), { expiresIn: '8h' });
+  return jwt.sign(payload, getSecret(), { expiresIn: '15m' });
 }
 
 export function verifyToken(token: string): JwtPayload | null {

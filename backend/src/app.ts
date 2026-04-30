@@ -72,7 +72,7 @@ export async function createApp() {
       context: async ({ req, res }) => {
         const token = req.cookies?.auth_token ?? null;
         const user = token ? verifyToken(token) : null;
-        return { user, res, requestId: req.requestId, loaders: createLoaders() };
+        return { user, req, res, requestId: req.requestId, loaders: createLoaders() };
       },
     })
   );

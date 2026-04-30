@@ -11,7 +11,7 @@ export const graphqlRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: false, 
   message: { errors: [{ message: 'Too many requests, please try again later.', extensions: { code: 'RATE_LIMITED' } }] },
 });
 

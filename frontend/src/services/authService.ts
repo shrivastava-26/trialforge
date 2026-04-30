@@ -23,3 +23,9 @@ export const LOGOUT_MUTATION = gql`
     logout
   }
 `;
+
+export const REFRESH_SESSION_MUTATION = gql`
+  mutation RefreshSession {
+    refreshSession
+  }
+`;
