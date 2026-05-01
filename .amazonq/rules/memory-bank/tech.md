@@ -26,6 +26,7 @@
 | Structured logging| winston 3.19               |
 | Batch loading     | dataloader 2.2             |
 | Testing           | vitest 3.2 + supertest 7.2 |
+| Test coverage     | v8 provider; backend covers services/repositories/utils/resolvers; frontend covers components/pages/hooks/utils; reporter: text + lcov |
 
 ## Frontend
 | Concern           | Library / Version          |
@@ -43,6 +44,7 @@
 | Form validation   | zod 4.3 + @hookform/resolvers 5.2 |
 | Toast/snackbar    | notistack 3.0              |
 | Testing           | vitest 3.2 + @testing-library/react 16.3 |
+| Test coverage     | v8 provider; frontend covers components/pages/hooks/utils; reporter: text + lcov |
 | Test matchers     | @testing-library/jest-dom 6.9 |
 | Test events       | @testing-library/user-event 14.6 |
 | Test environment  | jsdom 27.0                 |
@@ -56,9 +58,9 @@ npm install
 npm run dev      # ts-node-dev --respawn --transpile-only src/server.ts
 npm run build    # tsc → dist/
 npm start        # node dist/server.js
-npm test         # vitest run (unit + integration)
+npm test         # vitest run (unit + integration) — 10 test files, 107 tests
 npm run test:watch    # vitest watch mode
-npm run test:coverage # vitest with v8 coverage
+npm run test:coverage # vitest with v8 coverage (services, repositories, utils, resolvers)
 ```
 
 ### Frontend
@@ -68,9 +70,9 @@ npm install
 npm run dev      # vite dev server
 npm run build    # tsc + vite build
 npm run preview  # vite preview of build output
-npm test         # vitest run (component + smoke tests)
+npm test         # vitest run (component + smoke tests) — 8 test files, 36 tests
 npm run test:watch    # vitest watch mode
-npm run test:coverage # vitest with v8 coverage (components + pages)
+npm run test:coverage # vitest with v8 coverage (components, pages, hooks, utils)
 ```
 
 ## Ports & Endpoints
@@ -88,6 +90,8 @@ npm run test:coverage # vitest with v8 coverage (components + pages)
 PORT=4040
 JWT_SECRET=super-secret-jwt-key-change-in-production
 DB_PATH=./data/app.db
+# ACCESS_TOKEN_TTL_MS=900000    (15 min — defined as constant in jwt.ts)
+# REFRESH_TOKEN_TTL_MS=604800000 (7 days — defined as constant in authService.ts)
 ```
 
 **frontend/.env**
@@ -113,8 +117,9 @@ VITE_GRAPHQL_URL=http://localhost:4040/graphql
 ### Mutations
 | Operation                              | Auth       | Description                          |
 |----------------------------------------|------------|--------------------------------------|
-| `mutation login(email, password)`      | ❌         | Sets HttpOnly cookie, returns user+role |
-| `mutation logout`                      | ✅         | Clears HttpOnly cookie               |
+| `mutation login(email, password)`      | ❌         | Sets `auth_token` (15m) + `refresh_token` (7d) HttpOnly cookies, returns user+role |
+| `mutation logout`                      | ✅         | Revokes refresh token in DB, clears both cookies |
+| `mutation refreshSession`              | ❌         | Validates + rotates refresh token, issues new access token; returns true/false |
 | `mutation createStudy(input)`          | 🔒 ADMIN   | Creates study, logs audit (CREATE/Study) |
 | `mutation updateStudy(id, input)`      | 🔒 ADMIN   | Updates study, logs audit (UPDATE/Study) |
 | `mutation assignSiteToStudy(studyId, siteId)` | 🔒 ADMIN | Links site to study, logs audit (ASSIGN/StudySite) |
@@ -135,6 +140,6 @@ VITE_GRAPHQL_URL=http://localhost:4040/graphql
 - File: `backend/data/app.db` (auto-created on first run)
 - No ORM — raw SQL with typed helpers in `db/query.ts`
 - Schema + indexes + migration shims in `db/migrate.ts`
-- Tables: `users`, `studies`, `sites`, `examiners`, `examiner_certificates`, `study_sites`, `site_examiners`, `study_site_examiners`, `audit_logs`
+- Tables: `users`, `studies`, `sites`, `examiners`, `examiner_certificates`, `study_sites`, `site_examiners`, `study_site_examiners`, `audit_logs`, `refresh_tokens`
 - Seed: 2 users (ADMIN + VIEWER) always; 2 examiner certificates seeded automatically when examiners exist and no certs present yet (one valid, one expired)
 - Migration shims: `ALTER TABLE ... ADD COLUMN` wrapped in try/catch for backward compatibility; `certificate_id` column added to `study_site_examiners` via shim; audit_logs table recreated if old CHECK constraint rejects ASSIGN

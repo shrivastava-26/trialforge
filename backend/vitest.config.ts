@@ -10,7 +10,17 @@ export default defineConfig({
     include: ['src/__tests__/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['src/services/**', 'src/repositories/**'],
+      include: [
+        'src/services/**',
+        'src/repositories/**',
+        'src/utils/**',
+        'src/graphql/resolvers/**',
+      ],
+      exclude: [
+        'src/**/__tests__/**',
+        'src/**/index.ts',
+      ],
+      reporter: ['text', 'lcov'],
     },
   },
 });

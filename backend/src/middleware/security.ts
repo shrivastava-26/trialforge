@@ -9,7 +9,7 @@ export const helmetMiddleware = helmet({
 // General GraphQL rate limit: 500 requests per minute per IP.
 export const graphqlRateLimit = rateLimit({
   windowMs: 60 * 1000,
-  max: 20,
+  max: process.env.NODE_ENV === 'test' ? 10000 : 500,
   standardHeaders: true,
   legacyHeaders: false, 
   message: { errors: [{ message: 'Too many requests, please try again later.', extensions: { code: 'RATE_LIMITED' } }] },

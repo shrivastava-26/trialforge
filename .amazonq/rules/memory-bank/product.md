@@ -4,7 +4,9 @@
 SNA Demo is a full-stack clinical study management application demonstrating a modern React + GraphQL + SQLite architecture. It provides role-based authenticated access to a relational clinical data model — studies, sites, and examiners — with separate ADMIN and VIEWER experiences, a rich Material UI interface, and full CRUD + audit trail capabilities.
 
 ## Key Features
-- JWT-based authentication via HttpOnly cookies with role claim (`ADMIN` / `VIEWER`)
+- JWT-based authentication via HttpOnly cookies — **dual-token strategy**: short-lived access token (15m, `auth_token` cookie) + long-lived refresh token (7d, `refresh_token` cookie, opaque, SHA-256 hashed in DB)
+- Transparent token refresh: Apollo errorLink intercepts `UNAUTHENTICATED`, calls `refreshSession` mutation (single in-flight promise for concurrent requests), retries original operation; redirects to `/login` only if refresh fails
+- Refresh token rotation: each successful refresh revokes the old token and issues a new one; `replaced_by_token_hash` preserves audit chain
 - Role-based routing: ADMIN gets full CRUD + audit logs; VIEWER gets read-only access
 - Dashboard with Chart.js visualizations: study status doughnut, phase bar chart, examiner specialty breakdown (admin only), sites-by-country list
 - Studies, Sites, and Examiners list pages — server-side paginated MUI DataGrid tables
@@ -63,7 +65,8 @@ The project is **fully implemented** — all features described in the README an
 - ✅ Backend: all services, resolvers, schemas, validation, auth, audit logging
 - ✅ Frontend: all admin pages, viewer pages, CRUD dialogs, search, audit history
 - ✅ Domain rules: all study/site lifecycle rules enforced server-side
-- ✅ Security: HttpOnly cookies, bcrypt, Zod validation, role guards, parameterized SQL, helmet, rate limiting
+- ✅ Security: HttpOnly cookies (dual-token: access 15m + refresh 7d), bcrypt, Zod validation, role guards, parameterized SQL, helmet, rate limiting, refresh token rotation with SHA-256 hashing
 - ✅ Architecture: repository layer extracted from services; DataLoader per-request for N+1 prevention
-- ✅ Testing: Vitest unit tests (studyService, siteService, examinerService) + supertest integration tests; in-memory SQLite test DB; frontend Vitest + @testing-library/react component/smoke tests (AdminRoute, ProtectedRoute, ErrorBoundary, login)
+- ✅ Testing: Vitest unit tests (studyService, siteService, examinerService, authService, auditService, searchService, refreshTokenRepository, sseIntegrity) + supertest integration tests (graphql.test.ts + graphqlExpanded.test.ts); in-memory SQLite test DB; frontend Vitest + @testing-library/react component/smoke tests (AdminRoute, ProtectedRoute, ErrorBoundary, login, SearchPage, AdminExaminerDetailPage, AdminStudyDetailPage, ViewerStudiesPage)
+- ✅ Documentation: `docs/auth.md` (dual-token auth flow, rotation, security notes), `docs/TESTING.md` (test inventory, coverage targets, architecture notes)
 - ✅ Observability: Winston structured logging, Morgan HTTP logging, request ID correlation, introspection disabled in prod

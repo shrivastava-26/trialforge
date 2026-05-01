@@ -5,7 +5,7 @@
 ### TypeScript
 - `strict: true` enforced in both packages — no implicit `any`, no loose nulls
 - Explicit return types on all exported functions
-- Interfaces over type aliases for object shapes (`UserRow`, `StudyRow`, `SiteRow`, `ExaminerRow`, `ExaminerCertificateRow`, `AuditLogRow`, `GraphQLContext`)
+- Interfaces over type aliases for object shapes (`UserRow`, `StudyRow`, `SiteRow`, `ExaminerRow`, `ExaminerCertificateRow`, `RefreshTokenRow`, `AuditLogRow`, `GraphQLContext`)
 - Unknown resolver parent/args typed as `_: unknown, __: unknown` to satisfy strict mode
 - `as const` used for literal type narrowing (e.g., `sameSite: 'lax' as const`)
 - Optional relation fields on frontend types use `?` (e.g., `sites?: Site[]`)
@@ -317,7 +317,11 @@ function showToastOnce(message, variant, key) {
 ---
 
 ## Security Checklist
-- [x] HttpOnly cookie for JWT — no localStorage
+- [x] HttpOnly cookie for JWT access token (15m) — no localStorage
+- [x] HttpOnly cookie for refresh token (7d, opaque, SHA-256 hashed in DB) — no localStorage
+- [x] Refresh token rotation: each use revokes old token, issues new one; `replaced_by_token_hash` audit chain
+- [x] `refreshSession` mutation: transparent token refresh + retry via Apollo errorLink (single in-flight promise prevents concurrent refresh storms)
+- [x] `revokeAllUserRefreshTokens()` available for forced logout / security events
 - [x] `secure: true` in production (env-conditional, evaluated at call time)
 - [x] `sameSite: 'lax'` on auth cookie
 - [x] `credentials: 'include'` on Apollo httpLink
@@ -333,9 +337,11 @@ function showToastOnce(message, variant, key) {
 - [x] Winston structured logging + Morgan HTTP request logging
 - [x] Apollo introspection disabled in production
 - [x] GraphQL INTERNAL_SERVER_ERROR logged server-side; stack traces never sent to client
-- [x] Apollo errorLink handles RATE_LIMITED (429), network errors (503/502/504), UNAUTHENTICATED, FORBIDDEN
+- [x] Apollo errorLink handles RATE_LIMITED (429), network errors (503/502/504), UNAUTHENTICATED (refresh-and-retry with single shared promise, redirect on failure), FORBIDDEN, INTERNAL_SERVER_ERROR
+- [x] errorLink skips refresh when failing op is `RefreshSession` itself (prevents infinite loop)
 - [x] JWT_SECRET validated at startup (min 16 chars via Zod envSchema)
 - [ ] JWT_SECRET must be rotated before production deployment
+- [x] `refresh_tokens` table: no hard deletes; `revoked_at` used to invalidate; full session audit trail preserved
 - [x] No delete of core entity data (studies/sites/examiners/users) — junction unassign only
 - [x] Study status transitions enforced server-side (S1–S9, D1–D9) — UI restrictions are defence-in-depth only
 - [x] Pagination capped at pageSize ≤ 100 via paginationSchema in all list resolvers (≤ 1000 for pickers)

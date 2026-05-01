@@ -3,6 +3,9 @@
 ## Directory Layout
 ```
 SNA-y2/
+├── docs/
+│   ├── auth.md                  # Comprehensive auth & session management documentation (dual-token flow, rotation, security notes, manual test checklist)
+│   └── TESTING.md               # Testing guide: run commands, coverage targets, test inventory per file, architecture notes, what remains and why
 ├── backend/
 │   ├── data/app.db              # SQLite database (auto-created)
 │   ├── src/
@@ -43,21 +46,23 @@ SNA-y2/
 │   │   │   ├── authRepository.ts       # findUserByEmail, findUserById
 │   │   │   ├── certificateRepository.ts # findCertificatesByExaminerId, findCertificateById, countValidCertificates, insert/update certificate
 │   │   │   ├── examinerRepository.ts   # findExaminerById/Paged, insert/update examiner, findExaminersByIds (DataLoader)
+│   │   │   ├── refreshTokenRepository.ts  # insertRefreshToken, findRefreshToken, revokeRefreshToken (with replacement hash), revokeAllUserRefreshTokens
 │   │   │   ├── searchRepository.ts     # searchStudies, searchSites, searchExaminers (LIKE queries)
 │   │   │   ├── siteRepository.ts       # findSiteById/Paged, insert/update site, site-examiner junction ops, findSitesByIds (DataLoader)
 │   │   │   └── studyRepository.ts      # findStudyById/Paged, insert/update study, study-site/SSE junction ops, bulk SSE queries, findStudiesByIds (DataLoader)
 │   │   ├── services/
-│   │   │   ├── authService.ts   # loginUser (includes role in JWT), getUserById
+│   │   │   ├── authService.ts   # loginUser (includes role in JWT, returns dual tokens), refreshSession (rotation), revokeSession, getUserById
 │   │   │   ├── studyService.ts  # getStudiesPaged, CRUD, assignSiteToStudy, unassignSiteFromStudy, getStudySitesWithStudyExaminers, assignExaminerToStudySite, unassignExaminerFromStudySite
 │   │   │   ├── siteService.ts   # getSitesPaged, CRUD (createSite always Planned, P1/P2 rules), assignExaminerToSite, unassignExaminerFromSite
 │   │   │   ├── examinerService.ts # getExaminersPaged, CRUD, getCertificatesByExaminer, getCertificateById, hasValidCertificate, addExaminerCertificate, updateExaminerCertificate
 │   │   │   ├── searchService.ts # globalSearch — delegates to searchRepository
 │   │   │   └── auditService.ts  # getAuditLogs — delegates to auditRepository; supports entityType/entityTypes array, entityId
 │   │   ├── types/
-│   │   │   └── index.ts         # UserRow, StudyRow, SiteRow, ExaminerRow, ExaminerCertificateRow, AuditLogRow, JwtPayload (with role + email), GraphQLContext (now includes requestId + loaders)
+│   │   │   └── index.ts         # UserRow, StudyRow, SiteRow, ExaminerRow, ExaminerCertificateRow, RefreshTokenRow, AuditLogRow, JwtPayload (with role + email), GraphQLContext (now includes requestId + loaders)
 │   │   ├── utils/
 │   │   │   ├── jwt.ts           # signToken / verifyToken (JWT_SECRET read lazily via getSecret())
-│   │   │   └── password.ts      # hashPassword / verifyPassword (bcryptjs, cost 10)
+│   │   │   ├── password.ts      # hashPassword / verifyPassword (bcryptjs, cost 10)
+│   │   │   └── token.ts         # generateRefreshToken (48-byte hex), hashToken (SHA-256) — used by authService for refresh token rotation
 │   │   ├── validation/
 │   │   │   ├── index.ts         # Re-exports all schemas + helpers
 │   │   │   ├── helpers.ts       # parseOrThrow, zodErrorToFieldErrors, throwBadUserInput
@@ -69,11 +74,17 @@ SNA-y2/
 │   │   │   └── assignmentSchemas.ts # assignmentSchema, idSchema, siteExaminerSchema, studySiteExaminerSchema, paginationSchema, pickerPaginationSchema, searchSchema
 │   │   └── __tests__/
 │   │       ├── integration/
-│   │       │   └── graphql.test.ts  # Integration tests via supertest against full Express app
+│   │       │   ├── graphql.test.ts           # Integration tests via supertest: RBAC, createStudy, BAD_USER_INPUT, UNAUTHENTICATED, /health
+│   │       │   └── graphqlExpanded.test.ts   # Expanded integration: RBAC (site/examiner/audit), Zod validation, audit log creation (CREATE/UPDATE/ASSIGN/UNASSIGN), refresh token flow, expired cert, globalSearch, entityTypes array
 │   │       ├── unit/
-│   │       │   ├── studyService.test.ts  # Unit tests: createStudy, updateStudy status transitions, assignSiteToStudy, unassignSiteFromStudy
-│   │       │   ├── siteService.test.ts   # Unit tests: createSite, updateSite, assignExaminerToSite, unassignExaminerFromSite
-│   │       │   └── examinerService.test.ts # Unit tests: examiner CRUD + certificate operations
+│   │       │   ├── auditService.test.ts           # Unit tests: getAuditLogs queries/filters/pagination, insertAuditLog field storage + action types
+│   │       │   ├── authService.test.ts            # Unit tests: loginUser success/failure, hashed token storage, refresh TTL, refreshSession rotation/revoked/expired, revokeSession
+│   │       │   ├── examinerService.test.ts        # Unit tests: hasValidCertificate, duplicate cert, cross-examiner cert, updateCertificate conflict, getCertificatesByExaminer ordering
+│   │       │   ├── refreshTokenRepository.test.ts # Unit tests: insert/find, revokeRefreshToken (with/without replacement), revokeAllUserRefreshTokens (scoped, idempotent)
+│   │       │   ├── searchService.test.ts           # Unit tests: keyword matching (title/sponsor/name/specialty), entityType filter, domain filters (status/phase/city/country/role), %% wildcard
+│   │       │   ├── siteService.test.ts             # Unit tests: P3 create, P1 Active requires examiner, SI3 Closed site, SI6 no valid cert, P2 auto-downgrade
+│   │       │   ├── sseIntegrity.test.ts            # Unit tests: SI5a/SI5c prerequisites, SI7 expired/no-valid/auto-select/explicit cert, SI2 unassign blocked by SSE, D7 Closed site blocks activation
+│   │       │   └── studyService.test.ts            # Unit tests: S1/D1/D2/S8 create rules, S2/S3/D4/D6/D3 status transitions, SI1 assign Planned site, D9 unassign from Active study
 │   │       └── testHelpers.ts   # setupTestDb (in-memory SQLite), seedUser helper
 │   ├── .env                     # PORT=4040, JWT_SECRET, DB_PATH
 │   ├── package.json
@@ -86,6 +97,7 @@ SNA-y2/
     │   │   │   ├── AdminLayout.tsx    # AppHeader + AdminSidebar + main content
     │   │   │   └── AdminSidebar.tsx   # Collapsible drawer: Dashboard/Studies/Sites/Examiners/Search/Audit Logs
     │   │   ├── shared/
+    │   │   │   ├── ErrorBoundary.tsx  # React class component: catches render errors, shows fallback UI with "Try again" button
     │   │   │   ├── ViewerLayout.tsx   # AppHeader + ViewerSidebar + main content
     │   │   │   └── ViewerSidebar.tsx  # Collapsible drawer: Dashboard/Studies/Sites/Examiners/Search
     │   │   ├── skeletons/
@@ -167,11 +179,15 @@ SNA-y2/
     │   ├── theme.ts                 # MUI theme (teal palette, borderRadius 8, Poppins font, button overrides)
     │   └── vite-env.d.ts
     │   ├── __tests__/
-    │   │   ├── AdminRoute.test.tsx    # Unit test: AdminRoute redirects non-admin users
-    │   │   ├── ErrorBoundary.test.tsx # Unit test: ErrorBoundary renders fallback on error
-    │   │   ├── login.smoke.test.tsx   # Smoke test: LoginPage renders and accepts input
-    │   │   ├── ProtectedRoute.test.tsx # Unit test: ProtectedRoute redirects unauthenticated users
-    │   │   └── setup.ts               # Vitest setup: @testing-library/jest-dom matchers
+    │   │   ├── AdminExaminerDetailPage.test.tsx  # Component test: examiner details, cert table, Add Certificate dialog, mutation + success/error toasts
+    │   │   ├── AdminRoute.test.tsx               # Unit test: AdminRoute redirects non-admin users
+    │   │   ├── AdminStudyDetailPage.test.tsx     # Component test: StudySitePanel checkboxes, CertificatePickerDialog, assign/unassign mutations, Completed lock banner
+    │   │   ├── ErrorBoundary.test.tsx            # Unit test: ErrorBoundary renders fallback on error
+    │   │   ├── login.smoke.test.tsx              # Smoke test: LoginPage renders and accepts input
+    │   │   ├── ProtectedRoute.test.tsx           # Unit test: ProtectedRoute redirects unauthenticated users
+    │   │   ├── SearchPage.test.tsx               # Component test: idle state, single-char hint, debounce timing, query results, empty state, result count
+    │   │   ├── ViewerStudiesPage.test.tsx        # Component test: heading, study rows, read-only (no Create/Edit), row click navigation, error alert
+    │   │   └── setup.ts                          # Vitest setup: @testing-library/jest-dom matchers
     ├── .env                         # VITE_GRAPHQL_URL=http://localhost:4040/graphql
     ├── index.html
     ├── package.json
@@ -313,6 +329,9 @@ Apollo errorLink:
 - Completed studies show a lock banner and disable all assignment operations
 - **DataLoader pattern**: `createLoaders()` called per-request in Apollo context; loaders for entity-by-ID and relation fields prevent N+1 queries on list pages
 - **Repository layer**: all raw SQL moved from services into `repositories/`; services contain only business logic; resolvers call services only
-- **Testing**: Vitest with in-memory SQLite (`setupTestDb`); unit tests for all three service domains; integration tests via supertest; frontend Vitest with jsdom + @testing-library/react for component/smoke tests (AdminRoute, ProtectedRoute, ErrorBoundary, login smoke)
-- **Security hardening**: helmet (CSP disabled in dev), rate limiting (graphqlRateLimit 500/min, loginRateLimit 20/15min per IP+email), requestId middleware, Winston structured logging, introspection disabled in production
+- **Testing**: Vitest with in-memory SQLite (`setupTestDb`); unit tests for all service domains + authService + auditService + searchService + refreshTokenRepository + sseIntegrity; integration tests via supertest (graphql.test.ts + graphqlExpanded.test.ts covering RBAC, validation, audit logs, refresh flow, search, entityTypes); frontend Vitest with jsdom + @testing-library/react for component/smoke tests (AdminRoute, ProtectedRoute, ErrorBoundary, login smoke, SearchPage, AdminExaminerDetailPage, AdminStudyDetailPage, ViewerStudiesPage)
+- **Test counts**: Backend 10 files / 107 tests; Frontend 8 files / 36 tests — all passing
+- **Coverage config**: Backend covers `services/**`, `repositories/**`, `utils/**`, `graphql/resolvers/**`; Frontend covers `components/**`, `pages/**`, `hooks/**`, `utils/**`; both use `reporter: ['text', 'lcov']`
+- **Documentation**: `docs/auth.md` (dual-token auth flow, rotation, security notes, manual test checklist), `docs/TESTING.md` (test inventory per file, coverage targets, architecture notes, what remains and why)
+- **Security hardening**: helmet (CSP disabled in dev), rate limiting (graphqlRateLimit 500/min — 10000 in test env, loginRateLimit 20/15min per IP+email), requestId middleware, Winston structured logging, introspection disabled in production
 - **`RELATED_ENTITY_TYPES` for Examiner** now includes `ExaminerCertificate` (in addition to `Examiner`) so certificate audit entries appear in examiner history pages
