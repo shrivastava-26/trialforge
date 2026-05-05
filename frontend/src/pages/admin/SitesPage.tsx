@@ -31,15 +31,7 @@ import { CREATE_SITE_MUTATION, UPDATE_SITE_MUTATION } from '../../services/admin
 import { GET_SITES_QUERY } from '../../services/siteService';
 import { createSiteSchema, updateSiteSchema, CreateSiteFormValues, UpdateSiteFormValues, nextAllowedSiteStatus } from '../../validation';
 import { parseGqlError } from '../../utils/gqlErrors';
-
-
-
-const stepperSx = {
-  mb: 3,
-  '& .MuiStepLabel-label': { fontSize: '0.8rem', fontWeight: 600 },
-  '& .MuiStepIcon-root.Mui-active': { color: '#0f766e' },
-  '& .MuiStepIcon-root.Mui-completed': { color: '#0f766e' },
-};
+import { stepperSx } from '../../utils/shared';
 
 // ── Create Site (2 steps) ──────────────────────────────────────────────────
 // Step 1: Identity  — Site Code, Name

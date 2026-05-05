@@ -38,16 +38,9 @@ import {
   todayLocal,
 } from '../../validation';
 import { parseGqlError } from '../../utils/gqlErrors';
+import { stepperSx } from '../../utils/shared';
 
 const PHASES = ['Phase I', 'Phase II', 'Phase III', 'Phase IV'] as const;
-
-// ── Stepper styles ─────────────────────────────────────────────────────────
-const stepperSx = {
-  mb: 3,
-  '& .MuiStepLabel-label': { fontSize: '0.8rem', fontWeight: 600 },
-  '& .MuiStepIcon-root.Mui-active': { color: '#0f766e' },
-  '& .MuiStepIcon-root.Mui-completed': { color: '#0f766e' },
-};
 
 // ── Create Study (2 steps) ─────────────────────────────────────────────────
 // Step 1: Identity  — Protocol ID, Title, Sponsor, Phase

@@ -72,7 +72,7 @@ export function LoginPage() {
                 </Alert>
               )}
 
-              <Button type="submit" variant="contained" fullWidth disabled={loading} sx={{ mt: 1, py: 1.2 }}>
+              <Button type="submit" variant="contained" fullWidth disabled={loading} sx={{ mt: 1, py: 1.2 }} data-testid="login-submit">
                 {loading ? 'Signing in…' : 'Sign In'}
               </Button>
             </Box>

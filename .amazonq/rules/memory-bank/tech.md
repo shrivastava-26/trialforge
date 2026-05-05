@@ -27,6 +27,7 @@
 | Batch loading     | dataloader 2.2             |
 | Testing           | vitest 3.2 + supertest 7.2 |
 | Test coverage     | v8 provider; backend covers services/repositories/utils/resolvers; frontend covers components/pages/hooks/utils; reporter: text + lcov |
+| E2E testing       | @playwright/test 1.59 (root-level) |
 
 ## Frontend
 | Concern           | Library / Version          |
@@ -58,7 +59,7 @@ npm install
 npm run dev      # ts-node-dev --respawn --transpile-only src/server.ts
 npm run build    # tsc → dist/
 npm start        # node dist/server.js
-npm test         # vitest run (unit + integration) — 10 test files, 107 tests
+npm test         # vitest run (unit + integration) — 14 test files, 155 tests
 npm run test:watch    # vitest watch mode
 npm run test:coverage # vitest with v8 coverage (services, repositories, utils, resolvers)
 ```
@@ -70,9 +71,17 @@ npm install
 npm run dev      # vite dev server
 npm run build    # tsc + vite build
 npm run preview  # vite preview of build output
-npm test         # vitest run (component + smoke tests) — 8 test files, 36 tests
+npm test         # vitest run (component + smoke tests) — 13 test files, 63 tests
 npm run test:watch    # vitest watch mode
 npm run test:coverage # vitest with v8 coverage (components, pages, hooks, utils)
+```
+
+### E2E (Playwright)
+```bash
+# From project root
+npm run test:e2e          # npx playwright test (headless chromium)
+npm run test:e2e:headed   # npx playwright test --headed
+# Requires backend (port 4040) + frontend (port 5173) running (auto-started via webServer config)
 ```
 
 ## Ports & Endpoints

@@ -22,25 +22,13 @@ import { useExaminersPickerLazy } from '../../hooks/useExaminersPicker';
 import { ASSIGN_EXAMINER_TO_SITE, UNASSIGN_EXAMINER_FROM_SITE } from '../../services/adminService';
 import { GET_SITE_QUERY } from '../../services/siteService';
 import { parseGqlError } from '../../utils/gqlErrors';
+import { InfoField } from '../../components/InfoField';
 
 interface ExaminerOption {
   id: string;
   examinerCode: string;
   name: string;
   role: string;
-}
-
-function InfoField({ label, value }: { label: string; value: string }) {
-  return (
-    <Box>
-      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.3 }} color="text.primary">
-        {value || '—'}
-      </Typography>
-    </Box>
-  );
 }
 
 export function AdminSiteDetailPage() {

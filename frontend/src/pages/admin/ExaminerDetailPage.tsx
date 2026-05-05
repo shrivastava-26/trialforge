@@ -35,21 +35,9 @@ import { ADD_EXAMINER_CERTIFICATE_MUTATION, UPDATE_EXAMINER_CERTIFICATE_MUTATION
 import { GET_EXAMINER_QUERY } from '../../services/examinerService';
 import { createCertificateSchema, updateCertificateSchema, CreateCertificateFormValues, UpdateCertificateFormValues } from '../../validation';
 import { parseGqlError } from '../../utils/gqlErrors';
+import { InfoField } from '../../components/InfoField';
+import { isCertValid } from '../../utils/shared';
 import { ExaminerCertificate } from '../../types';
-
-function InfoField({ label, value }: { label: string; value: string }) {
-  return (
-    <Box>
-      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Typography>
-      <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.3 }} color="text.primary">{value || '—'}</Typography>
-    </Box>
-  );
-}
-
-function isCertValid(expiresOn: string): boolean {
-  const today = new Date().toISOString().slice(0, 10);
-  return expiresOn >= today;
-}
 
 // ── Add Certificate Dialog ────────────────────────────────────────────────
 function AddCertificateDialog({ examinerId, open, onClose }: { examinerId: string; open: boolean; onClose: () => void }) {

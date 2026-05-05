@@ -30,15 +30,9 @@ import { CREATE_EXAMINER_MUTATION, UPDATE_EXAMINER_MUTATION } from '../../servic
 import { GET_EXAMINERS_QUERY } from '../../services/examinerService';
 import { createExaminerSchema, updateExaminerSchema, CreateExaminerFormValues, UpdateExaminerFormValues } from '../../validation';
 import { parseGqlError } from '../../utils/gqlErrors';
+import { stepperSx } from '../../utils/shared';
 
 const ROLES = ['Principal Investigator', 'Sub-Investigator'] as const;
-
-const stepperSx = {
-  mb: 3,
-  '& .MuiStepLabel-label': { fontSize: '0.8rem', fontWeight: 600 },
-  '& .MuiStepIcon-root.Mui-active': { color: '#0f766e' },
-  '& .MuiStepIcon-root.Mui-completed': { color: '#0f766e' },
-};
 
 // ── Create Examiner (2 steps) ──────────────────────────────────────────────
 // Step 1: Identity  — Examiner Code, Name, Role

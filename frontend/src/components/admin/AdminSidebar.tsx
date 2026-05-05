@@ -81,6 +81,7 @@ export function AdminSidebar() {
             <Tooltip key={item.path} title={open ? '' : item.label} placement="right">
               <ListItemButton
                 onClick={() => navigate(item.path)}
+                data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                 sx={{
                   mb: 0.5, borderRadius: 1.5, minHeight: 42,
                   justifyContent: open ? 'flex-start' : 'center',

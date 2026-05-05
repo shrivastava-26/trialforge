@@ -6,6 +6,12 @@ SNA-y2/
 ├── docs/
 │   ├── auth.md                  # Comprehensive auth & session management documentation (dual-token flow, rotation, security notes, manual test checklist)
 │   └── TESTING.md               # Testing guide: run commands, coverage targets, test inventory per file, architecture notes, what remains and why
+├── e2e/
+│   ├── admin-workflow.spec.ts   # Playwright: create study/site/examiner, add certificate, audit logs page
+│   ├── refresh-smoke.spec.ts    # Playwright: clear auth_token → verify refresh or redirect
+│   └── viewer-smoke.spec.ts     # Playwright: login as viewer, navigate studies, verify read-only
+├── playwright.config.ts         # Playwright config: chromium, webServer for backend+frontend, 60s timeout
+├── package.json                 # Root package: @playwright/test devDep, test:e2e scripts
 ├── backend/
 │   ├── data/app.db              # SQLite database (auto-created)
 │   ├── src/
@@ -75,12 +81,16 @@ SNA-y2/
 │   │   └── __tests__/
 │   │       ├── integration/
 │   │       │   ├── graphql.test.ts           # Integration tests via supertest: RBAC, createStudy, BAD_USER_INPUT, UNAUTHENTICATED, /health
-│   │       │   └── graphqlExpanded.test.ts   # Expanded integration: RBAC (site/examiner/audit), Zod validation, audit log creation (CREATE/UPDATE/ASSIGN/UNASSIGN), refresh token flow, expired cert, globalSearch, entityTypes array
+│   │       │   ├── graphqlExpanded.test.ts   # Expanded integration: RBAC (site/examiner/audit), Zod validation, audit log creation (CREATE/UPDATE/ASSIGN/UNASSIGN), refresh token flow, expired cert, globalSearch, entityTypes array
+│   │       │   ├── graphqlRefresh.test.ts    # Integration: login cookie validation, refreshSession rotation/revoked/garbage/replay-attack, UNAUTHENTICATED on protected queries
+│   │       │   └── graphqlSearch.test.ts     # Integration: globalSearch keyword matching, validation (min 2 chars, %% filter-only), entityType filter, domain filters (phase/role/country), auth required
 │   │       ├── unit/
 │   │       │   ├── auditService.test.ts           # Unit tests: getAuditLogs queries/filters/pagination, insertAuditLog field storage + action types
 │   │       │   ├── authService.test.ts            # Unit tests: loginUser success/failure, hashed token storage, refresh TTL, refreshSession rotation/revoked/expired, revokeSession
+│   │       │   ├── certificateService.test.ts     # Unit tests: addExaminerCertificate (success, duplicate, cross-examiner, non-existent), updateExaminerCertificate (expiresOn, certificateId, conflict, not-found, no-op), hasValidCertificate (no cert, expired, today boundary, valid), getCertificatesByExaminer ordering
 │   │       │   ├── examinerService.test.ts        # Unit tests: hasValidCertificate, duplicate cert, cross-examiner cert, updateCertificate conflict, getCertificatesByExaminer ordering
 │   │       │   ├── refreshTokenRepository.test.ts # Unit tests: insert/find, revokeRefreshToken (with/without replacement), revokeAllUserRefreshTokens (scoped, idempotent)
+│   │       │   ├── resolverHelpers.test.ts        # Unit tests: requireAuth (null→UNAUTHENTICATED, user→pass), requireAdmin (null→UNAUTHENTICATED, VIEWER→FORBIDDEN, ADMIN→pass), logAudit (UPDATE/CREATE/ASSIGN/UNASSIGN field storage)
 │   │       │   ├── searchService.test.ts           # Unit tests: keyword matching (title/sponsor/name/specialty), entityType filter, domain filters (status/phase/city/country/role), %% wildcard
 │   │       │   ├── siteService.test.ts             # Unit tests: P3 create, P1 Active requires examiner, SI3 Closed site, SI6 no valid cert, P2 auto-downgrade
 │   │       │   ├── sseIntegrity.test.ts            # Unit tests: SI5a/SI5c prerequisites, SI7 expired/no-valid/auto-select/explicit cert, SI2 unassign blocked by SSE, D7 Closed site blocks activation
@@ -181,12 +191,17 @@ SNA-y2/
     │   ├── __tests__/
     │   │   ├── AdminExaminerDetailPage.test.tsx  # Component test: examiner details, cert table, Add Certificate dialog, mutation + success/error toasts
     │   │   ├── AdminRoute.test.tsx               # Unit test: AdminRoute redirects non-admin users
+    │   │   ├── AdminSiteDetailPage.test.tsx      # Component test: site details, assigned examiners, linked studies, History button, Assign section, unassign mutation
+    │   │   ├── AdminSitesPage.test.tsx           # Component test: heading + New Site button, DataGrid rows, Create dialog 2-step (Identity→Location), create mutation + success toast, Planned badge
     │   │   ├── AdminStudyDetailPage.test.tsx     # Component test: StudySitePanel checkboxes, CertificatePickerDialog, assign/unassign mutations, Completed lock banner
+    │   │   ├── AuditLogsPage.test.tsx            # Component test: heading + filter dropdown, audit rows render, expand row shows diff detail, empty state message
     │   │   ├── ErrorBoundary.test.tsx            # Unit test: ErrorBoundary renders fallback on error
     │   │   ├── login.smoke.test.tsx              # Smoke test: LoginPage renders and accepts input
     │   │   ├── ProtectedRoute.test.tsx           # Unit test: ProtectedRoute redirects unauthenticated users
     │   │   ├── SearchPage.test.tsx               # Component test: idle state, single-char hint, debounce timing, query results, empty state, result count
+    │   │   ├── ViewerDashboardPage.test.tsx      # Component test: heading, stat cards, chart sections, Recent Studies, Sites by Country, no specialty chart (viewer-only)
     │   │   ├── ViewerStudiesPage.test.tsx        # Component test: heading, study rows, read-only (no Create/Edit), row click navigation, error alert
+    │   │   ├── ViewerStudyDetailPage.test.tsx    # Component test: study details, per-site examiner breakdown, no CRUD buttons, no checkboxes, certificate info inline
     │   │   └── setup.ts                          # Vitest setup: @testing-library/jest-dom matchers
     ├── .env                         # VITE_GRAPHQL_URL=http://localhost:4040/graphql
     ├── index.html
@@ -329,9 +344,10 @@ Apollo errorLink:
 - Completed studies show a lock banner and disable all assignment operations
 - **DataLoader pattern**: `createLoaders()` called per-request in Apollo context; loaders for entity-by-ID and relation fields prevent N+1 queries on list pages
 - **Repository layer**: all raw SQL moved from services into `repositories/`; services contain only business logic; resolvers call services only
-- **Testing**: Vitest with in-memory SQLite (`setupTestDb`); unit tests for all service domains + authService + auditService + searchService + refreshTokenRepository + sseIntegrity; integration tests via supertest (graphql.test.ts + graphqlExpanded.test.ts covering RBAC, validation, audit logs, refresh flow, search, entityTypes); frontend Vitest with jsdom + @testing-library/react for component/smoke tests (AdminRoute, ProtectedRoute, ErrorBoundary, login smoke, SearchPage, AdminExaminerDetailPage, AdminStudyDetailPage, ViewerStudiesPage)
-- **Test counts**: Backend 10 files / 107 tests; Frontend 8 files / 36 tests — all passing
+- **Testing**: Vitest with in-memory SQLite (`setupTestDb`); unit tests for all service domains + authService + auditService + searchService + refreshTokenRepository + sseIntegrity + certificateService + resolverHelpers; integration tests via supertest (graphql.test.ts, graphqlExpanded.test.ts, graphqlRefresh.test.ts, graphqlSearch.test.ts covering RBAC, validation, audit logs, refresh flow, search, entityTypes); frontend Vitest with jsdom + @testing-library/react for component/smoke tests (AdminRoute, ProtectedRoute, ErrorBoundary, login smoke, SearchPage, AdminExaminerDetailPage, AdminStudyDetailPage, AdminSiteDetailPage, AdminSitesPage, AuditLogsPage, ViewerStudiesPage, ViewerStudyDetailPage, ViewerDashboardPage); Playwright E2E tests (admin-workflow, refresh-smoke, viewer-smoke)
+- **Test counts**: Backend 14 files / 155 tests; Frontend 13 files / 63 tests; E2E 3 spec files — all passing
 - **Coverage config**: Backend covers `services/**`, `repositories/**`, `utils/**`, `graphql/resolvers/**`; Frontend covers `components/**`, `pages/**`, `hooks/**`, `utils/**`; both use `reporter: ['text', 'lcov']`
+- **E2E testing**: Playwright at root level — `admin-workflow.spec.ts` (create study/site/examiner, add certificate, audit logs), `refresh-smoke.spec.ts` (auth_token cleared → refresh or redirect), `viewer-smoke.spec.ts` (login, navigate, verify read-only)
 - **Documentation**: `docs/auth.md` (dual-token auth flow, rotation, security notes, manual test checklist), `docs/TESTING.md` (test inventory per file, coverage targets, architecture notes, what remains and why)
 - **Security hardening**: helmet (CSP disabled in dev), rate limiting (graphqlRateLimit 500/min — 10000 in test env, loginRateLimit 20/15min per IP+email), requestId middleware, Winston structured logging, introspection disabled in production
 - **`RELATED_ENTITY_TYPES` for Examiner** now includes `ExaminerCertificate` (in addition to `Examiner`) so certificate audit entries appear in examiner history pages
