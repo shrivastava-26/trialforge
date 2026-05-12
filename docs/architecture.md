@@ -6,7 +6,8 @@
 trialforge/
 ├── modules/
 │   ├── site-network/      ← Module 1 (SNA) — fully functional
-│   └── identity/          ← Module 2 — backend skeleton (Phase 0.2)
+│   ├── identity/          ← Module 2 — backend skeleton (Phase 0.2)
+│   └── patient-registry/  ← Module 3 — backend skeleton (Phase 0.3)
 ├── packages/              ← shared libs (scaffolded, empty)
 ├── docs/                  ← platform documentation
 ├── e2e/                   ← platform-level e2e (future)
@@ -19,6 +20,7 @@ trialforge/
 |--------|------|--------|
 | site-network | Backend 4040, Frontend 5173 | Complete (SNA) |
 | identity | Backend 4050 | Backend skeleton with RBAC |
+| patient-registry | Backend 4060 | Backend skeleton (Phase 0.3) |
 
 ## Target State
 

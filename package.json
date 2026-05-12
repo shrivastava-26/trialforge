@@ -12,7 +12,10 @@
     "e2e:site-network": "cd modules/site-network && npm run test:e2e",
     "dev:identity:backend": "cd modules/identity/backend && npm install && npm run dev",
     "test:identity": "cd modules/identity/backend && npm test",
-    "test:identity:backend": "cd modules/identity/backend && npm test"
+    "test:identity:backend": "cd modules/identity/backend && npm test",
+    "dev:patient-registry:backend": "cd modules/patient-registry/backend && npm install && npm run dev",
+    "test:patient-registry": "cd modules/patient-registry/backend && npm test",
+    "test:patient-registry:backend": "cd modules/patient-registry/backend && npm test"
   },
   "keywords": ["clinical-trial", "ctms", "graphql", "react", "typescript"],
   "license": "UNLICENSED"

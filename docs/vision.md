@@ -10,7 +10,7 @@ TrialForge is a modular clinical-trial management platform built for learning an
 |--------|--------|
 | Site Network Administration (SNA) | ✅ Complete — `modules/site-network/` |
 | Identity & Access Management | ✅ Backend skeleton — `modules/identity/` |
-| Patient Registry | Planned |
+| Patient Registry | ✅ Backend skeleton — `modules/patient-registry/` |
 | Visit Scheduling | Planned |
 
 ## Out-of-Scope (v1)
@@ -41,7 +41,8 @@ ARCHIVED is a terminal state — no transitions out. This ensures full audit tra
 | 0.1 | Platform scaffolding, folder structure |
 | 0.1.1 | Documentation, memory bank, ADRs |
 | 0.2 | Identity module backend (users, roles, RBAC) ✅ |
-| 0.3 | Identity frontend + platform auth integration |
+| 0.3 | Patient Registry backend skeleton ✅ |
+| 0.3.1 | Identity frontend + platform auth integration |
 | 0.4 | Patient Registry module |
 | 0.5 | Visit Scheduling module |
 | 0.6 | eCRF / EDC module |
