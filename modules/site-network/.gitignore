@@ -1,0 +1,35 @@
+# ── Dependencies ─────────────────────────────────────────────────────────
+node_modules/
+
+# ── Build outputs ─────────────────────────────────────────────────────────
+backend/dist/
+frontend/dist/
+
+# ── Environment variables (contain secrets) ───────────────────────────────
+backend/.env
+frontend/.env
+
+# ── Database (auto-created on first run) ──────────────────────────────────
+backend/data/app.db
+backend/data/
+
+# ── Logs ──────────────────────────────────────────────────────────────────
+*.log
+backend/backend.log
+
+# ── OS / editor artifacts ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ── Test coverage reports ─────────────────────────────────────────────────
+backend/coverage/
+frontend/coverage/
+
+# ── Playwright (E2E) results & reports ────────────────────────────────────
+test-results/
+playwright-report/
+
+# ── TypeScript cache ──────────────────────────────────────────────────────
+*.tsbuildinfo

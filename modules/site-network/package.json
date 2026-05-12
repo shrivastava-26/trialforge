@@ -1,0 +1,23 @@
+{
+  "name": "sna-y2",
+  "version": "1.0.0",
+  "description": "A full-stack clinical study management application built with React + Apollo Client → Express + Apollo Server + SQLite.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test:e2e": "npx playwright test",
+    "test:e2e:headed": "npx playwright test --headed",
+    "test:e2e:slow": "npx playwright test --config playwright.slow.config.ts",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}
