@@ -21,7 +21,10 @@
     "test:visit-scheduling:backend": "cd modules/visit-scheduling/backend && npm test",
     "dev:form-builder:backend": "cd modules/form-builder/backend && npm install && npm run dev",
     "test:form-builder": "cd modules/form-builder/backend && npm test",
-    "test:form-builder:backend": "cd modules/form-builder/backend && npm test"
+    "test:form-builder:backend": "cd modules/form-builder/backend && npm test",
+    "dev:edc:backend": "cd modules/edc/backend && npm install && npm run dev",
+    "test:edc": "cd modules/edc/backend && npm test",
+    "test:edc:backend": "cd modules/edc/backend && npm test"
   },
   "keywords": ["clinical-trial", "ctms", "graphql", "react", "typescript"],
   "license": "UNLICENSED"

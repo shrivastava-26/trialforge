@@ -9,7 +9,8 @@ trialforge/
 │   ├── identity/          ← Module 2 — backend skeleton (Phase 0.2)
 │   ├── patient-registry/  ← Module 3 — backend skeleton (Phase 0.3)
 │   ├── visit-scheduling/  ← Module 4 — backend skeleton (Phase 0.4)
-│   └── form-builder/      ← Module 5 — backend skeleton (Phase 0.5)
+│   ├── form-builder/      ← Module 5 — backend skeleton (Phase 0.5)
+│   └── edc/               ← Module 6 — backend skeleton (Phase 0.6)
 ├── packages/              ← shared libs (scaffolded, empty)
 ├── docs/                  ← platform documentation
 ├── e2e/                   ← platform-level e2e (future)
@@ -25,6 +26,7 @@ trialforge/
 | patient-registry | Backend 4060 | Backend skeleton (Phase 0.3) |
 | visit-scheduling | Backend 4070 | Backend skeleton (Phase 0.4) |
 | form-builder | Backend 4080 | Backend skeleton (Phase 0.5) |
+| edc | Backend 4090 | Backend skeleton (Phase 0.6) |
 
 ## Target State
 
@@ -90,6 +92,21 @@ Key domain rules:
 - Only one ACTIVE version per (studyId, form name) at a time
 - Fields cannot be edited once a form is ACTIVE (create new version instead)
 - Publishing a new version automatically archives the previous ACTIVE version
+
+## EDC Data Entry RBAC Decision (Phase 0.6)
+
+| Operation | Allowed Roles |
+|-----------|---------------|
+| Read form instances/responses | ADMIN, CRO_MANAGER, SITE_COORDINATOR, DATA_MANAGER, AUDITOR |
+| Create/save/submit form instances | SITE_COORDINATOR only |
+| Archive form instances | ADMIN only |
+
+Key domain rules:
+- Auto-selects the ONE ACTIVE form for the study when creating an instance
+- Cannot create instances for ARCHIVED/CANCELLED visits
+- Validates response data against form field definitions (type checking, options, required)
+- Submit enforces all required fields; save (draft) does not
+- Once SUBMITTED, no further edits allowed
 
 ## Frontend Strategy
 
