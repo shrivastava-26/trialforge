@@ -15,7 +15,13 @@
     "test:identity:backend": "cd modules/identity/backend && npm test",
     "dev:patient-registry:backend": "cd modules/patient-registry/backend && npm install && npm run dev",
     "test:patient-registry": "cd modules/patient-registry/backend && npm test",
-    "test:patient-registry:backend": "cd modules/patient-registry/backend && npm test"
+    "test:patient-registry:backend": "cd modules/patient-registry/backend && npm test",
+    "dev:visit-scheduling:backend": "cd modules/visit-scheduling/backend && npm install && npm run dev",
+    "test:visit-scheduling": "cd modules/visit-scheduling/backend && npm test",
+    "test:visit-scheduling:backend": "cd modules/visit-scheduling/backend && npm test",
+    "dev:form-builder:backend": "cd modules/form-builder/backend && npm install && npm run dev",
+    "test:form-builder": "cd modules/form-builder/backend && npm test",
+    "test:form-builder:backend": "cd modules/form-builder/backend && npm test"
   },
   "keywords": ["clinical-trial", "ctms", "graphql", "react", "typescript"],
   "license": "UNLICENSED"
