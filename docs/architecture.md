@@ -5,12 +5,14 @@
 ```
 trialforge/
 ├── modules/
-│   ├── site-network/      ← Module 1 (SNA) — fully functional
-│   ├── identity/          ← Module 2 — backend skeleton (Phase 0.2)
-│   ├── patient-registry/  ← Module 3 — backend skeleton (Phase 0.3)
-│   ├── visit-scheduling/  ← Module 4 — backend skeleton (Phase 0.4)
-│   ├── form-builder/      ← Module 5 — backend skeleton (Phase 0.5)
-│   └── edc/               ← Module 6 — backend skeleton (Phase 0.6)
+│   ├── site-network/         ← Module 1 (SNA) — fully functional
+│   ├── identity/             ← Module 2 — backend skeleton (Phase 0.2)
+│   ├── patient-registry/     ← Module 3 — backend skeleton (Phase 0.3)
+│   ├── visit-scheduling/     ← Module 4 — backend skeleton (Phase 0.4)
+│   ├── form-builder/         ← Module 5 — backend skeleton (Phase 0.5)
+│   ├── edc/                  ← Module 6 — backend skeleton (Phase 0.6)
+│   ├── query-management/     ← Module 7 — backend skeleton (Phase 0.7)
+│   └── document-management/  ← Module 8 — backend skeleton (Phase 0.8)
 ├── packages/              ← shared libs (scaffolded, empty)
 ├── docs/                  ← platform documentation
 ├── e2e/                   ← platform-level e2e (future)
@@ -27,6 +29,8 @@ trialforge/
 | visit-scheduling | Backend 4070 | Backend skeleton (Phase 0.4) |
 | form-builder | Backend 4080 | Backend skeleton (Phase 0.5) |
 | edc | Backend 4090 | Backend skeleton (Phase 0.6) |
+| query-management | Backend 4100 | Backend skeleton (Phase 0.7) |
+| document-management | Backend 4110 | Backend skeleton (Phase 0.8) |
 
 ## Target State
 
@@ -107,6 +111,41 @@ Key domain rules:
 - Validates response data against form field definitions (type checking, options, required)
 - Submit enforces all required fields; save (draft) does not
 - Once SUBMITTED, no further edits allowed
+
+## Query Management RBAC & Behavior (Phase 0.7)
+
+| Operation | Allowed Roles |
+|-----------|---------------|
+| Read queries/messages | ADMIN, CRO_MANAGER, SITE_COORDINATOR, DATA_MANAGER, AUDITOR |
+| Create query (raise) | DATA_MANAGER only |
+| Post message | DATA_MANAGER, SITE_COORDINATOR |
+| Close / Reopen query | DATA_MANAGER only |
+| Archive query | ADMIN only |
+
+Key domain rules:
+- Queries attach to a SUBMITTED form instance (not field-level)
+- Message thread: multiple back-and-forth messages until closed
+- DATA_MANAGER message → status stays/becomes OPEN
+- SITE_COORDINATOR message → status becomes ANSWERED
+- DATA_MANAGER can close from OPEN or ANSWERED (no site response required)
+- Reopen: CLOSED → OPEN (DATA_MANAGER only)
+- ARCHIVED blocks all further mutations
+
+## Document Management (eTMF-lite) RBAC Decision (Phase 0.8)
+
+| Operation | Allowed Roles |
+|-----------|---------------|
+| Read documents/versions | ADMIN, CRO_MANAGER, SITE_COORDINATOR, DATA_MANAGER, MONITOR, AUDITOR |
+| Create documents, add versions | CRO_MANAGER, ADMIN |
+| Set document status (non-archive) | CRO_MANAGER, ADMIN |
+| Archive documents | ADMIN only |
+
+Key domain rules:
+- Metadata-only in v0.8: fileRef is a string path/URL, no actual file upload
+- Only one ACTIVE version per document at a time
+- Adding a new version supersedes the previous ACTIVE version
+- Archiving a document archives all its versions
+- Cannot add versions to an ARCHIVED document
 
 ## Frontend Strategy
 
