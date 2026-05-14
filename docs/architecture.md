@@ -12,7 +12,8 @@ trialforge/
 │   ├── form-builder/         ← Module 5 — backend skeleton (Phase 0.5)
 │   ├── edc/                  ← Module 6 — backend skeleton (Phase 0.6)
 │   ├── query-management/     ← Module 7 — backend skeleton (Phase 0.7)
-│   └── document-management/  ← Module 8 — backend skeleton (Phase 0.8)
+│   ├── document-management/  ← Module 8 — backend skeleton (Phase 0.8)
+│   └── reporting/            ← Module 9 — backend skeleton (Phase 0.9)
 ├── packages/              ← shared libs (scaffolded, empty)
 ├── docs/                  ← platform documentation
 ├── e2e/                   ← platform-level e2e (future)
@@ -31,6 +32,7 @@ trialforge/
 | edc | Backend 4090 | Backend skeleton (Phase 0.6) |
 | query-management | Backend 4100 | Backend skeleton (Phase 0.7) |
 | document-management | Backend 4110 | Backend skeleton (Phase 0.8) |
+| reporting | Backend 4120 | Backend skeleton (Phase 0.9) |
 
 ## Target State
 
@@ -146,6 +148,26 @@ Key domain rules:
 - Adding a new version supersedes the previous ACTIVE version
 - Archiving a document archives all its versions
 - Cannot add versions to an ARCHIVED document
+
+## Reporting / Dashboard API (Phase 0.9)
+
+| Operation | Allowed Roles |
+|-----------|---------------|
+| getDashboardMetrics | ADMIN, CRO_MANAGER, SITE_COORDINATOR, DATA_MANAGER, MONITOR, AUDITOR |
+
+Site-scoped RBAC rule:
+- SITE_COORDINATOR **must** provide `siteId` — cannot access global metrics
+- All other roles can access global metrics or optionally filter by studyId/siteId
+
+Metrics provided:
+- Patients: total, enrolled, archived
+- Visits: planned, completed, missed
+- Forms: active count
+- Form instances: draft, submitted
+- Queries: open, answered, closed
+- Documents: total, archived, versions total
+
+Filtering: studyId and siteId propagate through joins (tf_study_subjects → tf_patient_visits → tf_form_instances → tf_queries). Documents filter by studyId only (no site-level ownership).
 
 ## Frontend Strategy
 
