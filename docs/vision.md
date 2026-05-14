@@ -16,6 +16,7 @@ TrialForge is a modular clinical-trial management platform built for learning an
 | EDC (Data Entry) | ✅ Backend skeleton — `modules/edc/` |
 | Query Management | ✅ Backend skeleton — `modules/query-management/` |
 | Document Management (eTMF-lite) | ✅ Backend skeleton — `modules/document-management/` |
+| Reporting / Dashboard API | ✅ Backend skeleton — `modules/reporting/` |
 
 ## Out-of-Scope (v1)
 
@@ -52,4 +53,5 @@ ARCHIVED is a terminal state — no transitions out. This ensures full audit tra
 | 0.6 | EDC Data Entry backend skeleton ✅ |
 | 0.7 | Query Management backend skeleton ✅ |
 | 0.8 | Document Management (eTMF-lite) backend skeleton ✅ |
+| 0.9 | Reporting / Dashboard API backend skeleton ✅ |
 | 1.0 | Integration, cross-module workflows, platform e2e |

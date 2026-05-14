@@ -30,7 +30,10 @@
     "test:query-management:backend": "cd modules/query-management/backend && npm test",
     "dev:document-management:backend": "cd modules/document-management/backend && npm install && npm run dev",
     "test:document-management": "cd modules/document-management/backend && npm test",
-    "test:document-management:backend": "cd modules/document-management/backend && npm test"
+    "test:document-management:backend": "cd modules/document-management/backend && npm test",
+    "dev:reporting:backend": "cd modules/reporting/backend && npm install && npm run dev",
+    "test:reporting": "cd modules/reporting/backend && npm test",
+    "test:reporting:backend": "cd modules/reporting/backend && npm test"
   },
   "keywords": ["clinical-trial", "ctms", "graphql", "react", "typescript"],
   "license": "UNLICENSED"
