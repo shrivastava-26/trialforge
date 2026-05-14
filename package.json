@@ -24,7 +24,13 @@
     "test:form-builder:backend": "cd modules/form-builder/backend && npm test",
     "dev:edc:backend": "cd modules/edc/backend && npm install && npm run dev",
     "test:edc": "cd modules/edc/backend && npm test",
-    "test:edc:backend": "cd modules/edc/backend && npm test"
+    "test:edc:backend": "cd modules/edc/backend && npm test",
+    "dev:query-management:backend": "cd modules/query-management/backend && npm install && npm run dev",
+    "test:query-management": "cd modules/query-management/backend && npm test",
+    "test:query-management:backend": "cd modules/query-management/backend && npm test",
+    "dev:document-management:backend": "cd modules/document-management/backend && npm install && npm run dev",
+    "test:document-management": "cd modules/document-management/backend && npm test",
+    "test:document-management:backend": "cd modules/document-management/backend && npm test"
   },
   "keywords": ["clinical-trial", "ctms", "graphql", "react", "typescript"],
   "license": "UNLICENSED"
