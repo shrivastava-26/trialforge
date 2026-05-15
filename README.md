@@ -30,6 +30,24 @@ The first and currently active module. Manages clinical sites, investigators, fe
 
 ## Quick Start
 
+### Environment Setup
+
+Before running any module, copy the environment template:
+
+```bash
+# For each module you plan to use, copy .env.example to .env
+cp modules/site-network/backend/.env.example modules/site-network/backend/.env
+cp modules/reporting/backend/.env.example modules/reporting/backend/.env
+# ... repeat for other modules as needed
+```
+
+**Important:** 
+- Keep `.env` files local only (they are gitignored)
+- The `.env.example` files contain demo placeholders
+- Change JWT secrets and other sensitive values for production
+
+### Development
+
 ```bash
 # Start the SNA backend (installs deps automatically)
 npm run dev:site-network:backend
