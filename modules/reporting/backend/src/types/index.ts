@@ -34,6 +34,7 @@ export interface MetricsFilter {
 export interface JwtPayload {
   userId: number;
   email: string;
+  role?: RoleName;
   roles: RoleName[];
 }
 

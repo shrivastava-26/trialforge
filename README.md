@@ -38,6 +38,19 @@ npm run dev:site-network:backend
 npm run dev:site-network:frontend
 ```
 
+### Platform UI Shell
+
+```bash
+# Terminal 1 — Auth backend (port 4000)
+npm run dev:site-network:backend
+
+# Terminal 2 — Reporting backend (port 4120)
+npm run dev:reporting:backend
+
+# Terminal 3 — Shell app (port 5173)
+npm run dev:shell
+```
+
 ## Running Tests
 
 ```bash
@@ -46,6 +59,9 @@ npm run test:site-network
 
 # Backend tests only
 npm run test:site-network:backend
+
+# Shell app tests
+npm run test:shell
 
 # Playwright e2e tests (requires backend + frontend running)
 npm run e2e:site-network

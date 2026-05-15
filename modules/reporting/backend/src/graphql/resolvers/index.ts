@@ -15,7 +15,8 @@ export const resolvers = {
     ) => {
       requireAnyRole(context, [...READ_ROLES]);
       const filter = parseOrThrow(metricsFilterSchema, { studyId: args.studyId, siteId: args.siteId });
-      return metricsService.getDashboardMetrics(filter, context.user!.roles);
+      const userRoles = context.user!.roles ?? [];
+      return metricsService.getDashboardMetrics(filter, userRoles);
     },
   },
 };
