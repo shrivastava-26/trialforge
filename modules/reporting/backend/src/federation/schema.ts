@@ -14,6 +14,11 @@ const typeDefs = gql`
     metrics(studyId: ID, siteId: ID): DashboardMetrics!
   }
 
+  extend type Study @key(fields: "id") {
+    id: ID! @external
+    metrics(siteId: ID): DashboardMetrics!
+  }
+
   type DashboardMetrics {
     patientsTotal: Int!
     patientsEnrolled: Int!

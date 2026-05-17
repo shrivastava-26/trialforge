@@ -34,4 +34,19 @@ export const resolvers = {
       return metricsService.getDashboardMetrics(filter, userRoles);
     },
   },
+  Study: {
+    __resolveReference(ref: { id: string }) {
+      return ref;
+    },
+    metrics(
+      parent: { id: string },
+      args: { siteId?: string },
+      context: GraphQLContext
+    ) {
+      requireAnyRole(context, [...READ_ROLES]);
+      const filter = parseOrThrow(metricsFilterSchema, { studyId: parent.id, siteId: args.siteId });
+      const userRoles = context.user!.roles ?? [];
+      return metricsService.getDashboardMetrics(filter, userRoles);
+    },
+  },
 };
