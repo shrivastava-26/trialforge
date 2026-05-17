@@ -47,6 +47,7 @@ const SUBGRAPHS = [
   { name: 'visit-scheduling', url: process.env.SUBGRAPH_VISIT_SCHEDULING_URL ?? 'http://localhost:4141/graphql' },
   { name: 'edc', url: process.env.SUBGRAPH_EDC_URL ?? 'http://localhost:4151/graphql' },
   { name: 'query-management', url: process.env.SUBGRAPH_QUERY_MANAGEMENT_URL ?? 'http://localhost:4161/graphql' },
+  { name: 'form-builder', url: process.env.SUBGRAPH_FORM_BUILDER_URL ?? 'http://localhost:4171/graphql' },
 ];
 
 async function waitForSubgraphs(maxRetries = 30, delayMs = 2000): Promise<void> {
@@ -108,7 +109,7 @@ async function start() {
   const port = Number(process.env.PORT_FEDERATION ?? 4250);
   app.listen(port, () => {
     console.log(`[federation-gateway] Running at http://localhost:${port}/graphql`);
-    console.log(`  Composing subgraphs: site-network, reporting, patient-registry, visit-scheduling, edc, query-management`);
+    console.log(`  Composing subgraphs: site-network, reporting, patient-registry, visit-scheduling, edc, query-management, form-builder`);
   });
 }
 

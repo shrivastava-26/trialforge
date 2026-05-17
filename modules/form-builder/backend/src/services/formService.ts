@@ -93,6 +93,16 @@ export function getForms(studyId: number, page: number, pageSize: number): { row
   return { rows: rows.map(toForm), total };
 }
 
+export function getFormsFiltered(studyId: number, page: number, pageSize: number, status?: string): { rows: Form[]; total: number } {
+  const { rows, total } = formRepo.findByStudyIdFiltered(studyId, page, pageSize, status);
+  return { rows: rows.map(toForm), total };
+}
+
+export function getFormById(id: number): Form | undefined {
+  const row = formRepo.findById(id);
+  return row ? toForm(row) : undefined;
+}
+
 export function getForm(id: number): FormWithFields {
   const row = requireFormExists(id);
   const fields = fieldRepo.findByFormId(id).map(toField);

@@ -15,6 +15,19 @@ export function findByStudyId(studyId: number, page: number, pageSize: number): 
   return { rows, total: countRow?.cnt ?? 0 };
 }
 
+export function findByStudyIdFiltered(studyId: number, page: number, pageSize: number, status?: string): { rows: TfFormRow[]; total: number } {
+  const offset = (page - 1) * pageSize;
+  if (status) {
+    const countRow = queryOne<{ cnt: number }>('SELECT COUNT(*) as cnt FROM tf_forms WHERE study_id = ? AND status = ?', [studyId, status]);
+    const rows = queryAll<TfFormRow>(
+      'SELECT * FROM tf_forms WHERE study_id = ? AND status = ? ORDER BY name ASC, version DESC LIMIT ? OFFSET ?',
+      [studyId, status, pageSize, offset]
+    );
+    return { rows, total: countRow?.cnt ?? 0 };
+  }
+  return findByStudyId(studyId, page, pageSize);
+}
+
 export function findByStudyNameVersion(studyId: number, name: string, version: number): TfFormRow | undefined {
   return queryOne<TfFormRow>(
     'SELECT * FROM tf_forms WHERE study_id = ? AND name = ? AND version = ?',
