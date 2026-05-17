@@ -34,7 +34,8 @@ export interface TfDocumentVersionRow {
 export interface JwtPayload {
   userId: number;
   email: string;
-  roles: RoleName[];
+  role?: RoleName;
+  roles?: RoleName[];
 }
 
 export interface GraphQLContext {
