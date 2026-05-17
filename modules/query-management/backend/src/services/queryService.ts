@@ -68,6 +68,25 @@ export function getQueriesByFormInstance(
   return { rows: rows.map(toQuery), total };
 }
 
+export function getQueriesByFormInstanceFiltered(
+  formInstanceId: number,
+  page: number,
+  pageSize: number,
+  status?: string
+): { rows: Query[]; total: number } {
+  const { rows, total } = queryRepo.findByFormInstanceIdFiltered(formInstanceId, page, pageSize, status);
+  return { rows: rows.map(toQuery), total };
+}
+
+export function getMessagesByQueryId(
+  queryId: number,
+  page: number,
+  pageSize: number
+): { rows: QueryMessage[]; total: number } {
+  const { rows, total } = messageRepo.findByQueryIdPaginated(queryId, page, pageSize);
+  return { rows: rows.map(toMessage), total };
+}
+
 export function getQuery(id: number): QueryWithMessages {
   const row = requireQueryExists(id);
   const messages = messageRepo.findByQueryId(id).map(toMessage);

@@ -22,6 +22,28 @@ export function findByFormInstanceId(
   return { rows, total: countRow?.cnt ?? 0 };
 }
 
+export function findByFormInstanceIdFiltered(
+  formInstanceId: number,
+  page: number,
+  pageSize: number,
+  status?: string
+): { rows: TfQueryRow[]; total: number } {
+  const offset = (page - 1) * pageSize;
+  const where = status
+    ? 'WHERE form_instance_id = ? AND status = ?'
+    : 'WHERE form_instance_id = ?';
+  const params = status ? [formInstanceId, status] : [formInstanceId];
+  const countRow = queryOne<{ cnt: number }>(
+    `SELECT COUNT(*) as cnt FROM tf_queries ${where}`,
+    params
+  );
+  const rows = queryAll<TfQueryRow>(
+    `SELECT * FROM tf_queries ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...params, pageSize, offset]
+  );
+  return { rows, total: countRow?.cnt ?? 0 };
+}
+
 export function insert(formInstanceId: number, title: string, description: string): number {
   const { lastInsertRowid } = execute(
     'INSERT INTO tf_queries (form_instance_id, title, description) VALUES (?, ?, ?)',
