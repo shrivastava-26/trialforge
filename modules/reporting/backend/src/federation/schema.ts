@@ -9,8 +9,9 @@ import { resolvers } from '../graphql/resolvers';
 const typeDefs = gql`
   extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@external"])
 
-  type User @key(fields: "id") {
+  extend type User @key(fields: "id") {
     id: ID! @external
+    metrics(studyId: ID, siteId: ID): DashboardMetrics!
   }
 
   type DashboardMetrics {

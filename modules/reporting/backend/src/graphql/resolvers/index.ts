@@ -19,4 +19,19 @@ export const resolvers = {
       return metricsService.getDashboardMetrics(filter, userRoles);
     },
   },
+  User: {
+    __resolveReference(ref: { id: string }) {
+      return ref;
+    },
+    metrics(
+      _parent: { id: string },
+      args: { studyId?: string; siteId?: string },
+      context: GraphQLContext
+    ) {
+      requireAnyRole(context, [...READ_ROLES]);
+      const filter = parseOrThrow(metricsFilterSchema, { studyId: args.studyId, siteId: args.siteId });
+      const userRoles = context.user!.roles ?? [];
+      return metricsService.getDashboardMetrics(filter, userRoles);
+    },
+  },
 };
