@@ -173,3 +173,17 @@ export function getStudySubjects(
   const { rows, total } = studySubjectRepo.findByStudySite(studyId, siteId, page, pageSize);
   return { rows: rows.map(toStudySubject), total };
 }
+
+export function getStudySubjectsBySite(
+  siteId: string,
+  page: number,
+  pageSize: number
+): { rows: StudySubject[]; total: number } {
+  const { rows, total } = studySubjectRepo.findBySite(siteId, page, pageSize);
+  return { rows: rows.map(toStudySubject), total };
+}
+
+export function getStudySubjectById(id: number): StudySubject | undefined {
+  const row = studySubjectRepo.findById(id);
+  return row ? toStudySubject(row) : undefined;
+}

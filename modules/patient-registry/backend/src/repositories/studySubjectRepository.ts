@@ -38,6 +38,23 @@ export function findByStudySite(
   return { rows, total: countRow?.cnt ?? 0 };
 }
 
+export function findBySite(
+  siteId: string,
+  page: number,
+  pageSize: number
+): { rows: TfStudySubjectRow[]; total: number } {
+  const offset = (page - 1) * pageSize;
+  const countRow = queryOne<{ cnt: number }>(
+    'SELECT COUNT(*) as cnt FROM tf_study_subjects WHERE site_id = ?',
+    [siteId]
+  );
+  const rows = queryAll<TfStudySubjectRow>(
+    'SELECT * FROM tf_study_subjects WHERE site_id = ? ORDER BY assigned_at DESC LIMIT ? OFFSET ?',
+    [siteId, pageSize, offset]
+  );
+  return { rows, total: countRow?.cnt ?? 0 };
+}
+
 export function findExisting(studyId: string, siteId: string, patientId: number): TfStudySubjectRow | undefined {
   return queryOne<TfStudySubjectRow>(
     'SELECT * FROM tf_study_subjects WHERE study_id = ? AND site_id = ? AND patient_id = ?',
