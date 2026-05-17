@@ -43,4 +43,24 @@ describe('Federation subgraph schemas', () => {
     expect(sdl).toContain('type User');
     expect(sdl).toContain('@external');
   });
+
+  it('patient-registry subgraph schema builds and exposes _service SDL', async () => {
+    const { schema } = await import(
+      '../../../patient-registry/backend/src/federation/schema'
+    ) as { schema: import('graphql').GraphQLSchema };
+
+    const result = await graphql({
+      schema,
+      source: '{ _service { sdl } }',
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?._service).toBeDefined();
+    const sdl = (result.data!._service as { sdl: string }).sdl;
+    expect(sdl).toContain('@key');
+    expect(sdl).toContain('type Patient');
+    expect(sdl).toContain('type StudySubject');
+    expect(sdl).toContain('type Study');
+    expect(sdl).toContain('@external');
+  });
 });
