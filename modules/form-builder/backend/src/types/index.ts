@@ -38,6 +38,7 @@ export interface JwtPayload {
   userId: number;
   email: string;
   roles: RoleName[];
+  role?: string;
 }
 
 export interface GraphQLContext {

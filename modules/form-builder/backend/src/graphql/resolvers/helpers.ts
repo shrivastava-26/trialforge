@@ -7,9 +7,14 @@ export function requireAuth(context: GraphQLContext): void {
   }
 }
 
+function normalizeRoles(context: GraphQLContext): string[] {
+  const u = context.user!;
+  return u.roles ?? (u.role ? [u.role] : []);
+}
+
 export function requireRole(context: GraphQLContext, role: RoleName): void {
   requireAuth(context);
-  if (!context.user!.roles.includes(role)) {
+  if (!normalizeRoles(context).includes(role)) {
     throw new GraphQLError(`Forbidden: ${role} access required`, {
       extensions: { code: 'FORBIDDEN' },
     });
@@ -18,7 +23,8 @@ export function requireRole(context: GraphQLContext, role: RoleName): void {
 
 export function requireAnyRole(context: GraphQLContext, roles: RoleName[]): void {
   requireAuth(context);
-  const hasRole = roles.some((r) => context.user!.roles.includes(r));
+  const userRoles = normalizeRoles(context);
+  const hasRole = roles.some((r) => userRoles.includes(r));
   if (!hasRole) {
     throw new GraphQLError(`Forbidden: requires one of [${roles.join(', ')}]`, {
       extensions: { code: 'FORBIDDEN' },
