@@ -115,6 +115,16 @@ export function getFormInstancesByVisit(patientVisitId: number): FormInstance[] 
   return instanceRepo.findByVisitId(patientVisitId).map(toInstance);
 }
 
+export function getFormInstancesFiltered(
+  patientVisitId: number,
+  page: number,
+  pageSize: number,
+  status?: string
+): { rows: FormInstance[]; total: number } {
+  const { rows, total } = instanceRepo.findByPatientVisitIdFiltered(patientVisitId, page, pageSize, status);
+  return { rows: rows.map(toInstance), total };
+}
+
 export function getFormInstance(id: number): FormInstanceWithResponse {
   const row = instanceRepo.findById(id);
   if (!row) throw new GraphQLError('Form instance not found', { extensions: { code: 'NOT_FOUND' } });
