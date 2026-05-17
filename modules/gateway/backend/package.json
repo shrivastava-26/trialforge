@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev:federation": "ts-node-dev --respawn --transpile-only src/federation-gateway.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "vitest run",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@apollo/server": "^4.10.0",
+    "@apollo/gateway": "^2.7.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

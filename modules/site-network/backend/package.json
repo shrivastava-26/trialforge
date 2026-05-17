@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev:federation": "ts-node-dev --respawn --transpile-only src/federation/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "vitest run",
@@ -11,6 +12,8 @@
   },
   "dependencies": {
     "@apollo/server": "^4.10.0",
+    "@apollo/subgraph": "^2.7.0",
+    "graphql-tag": "^2.12.6",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.9.0",
     "cookie-parser": "^1.4.7",
