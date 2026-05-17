@@ -6,9 +6,17 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs } from './graphql/schema';
 import { resolvers } from './graphql/resolvers';
-import type { GatewayContext } from './types';
+import { getModuleUrl } from './services/moduleProxyService';
+import type { GatewayContext, Role } from './types';
 
 const isProd = process.env.NODE_ENV === 'production';
+
+const KNOWN_CODES = new Set([
+  'UNAUTHENTICATED',
+  'FORBIDDEN',
+  'BAD_USER_INPUT',
+  'INTERNAL_SERVER_ERROR',
+]);
 
 export async function createApp() {
   const app = express();
@@ -32,7 +40,14 @@ export async function createApp() {
     formatError: (formattedError) => {
       const { stacktrace: _s, ...safeExtensions } =
         (formattedError.extensions ?? {}) as Record<string, unknown> & { stacktrace?: unknown };
-      return { ...formattedError, extensions: safeExtensions };
+      const code = safeExtensions.code as string | undefined;
+      return {
+        ...formattedError,
+        extensions: {
+          ...safeExtensions,
+          code: code && KNOWN_CODES.has(code) ? code : 'INTERNAL_SERVER_ERROR',
+        },
+      };
     },
   });
   await server.start();
@@ -40,7 +55,31 @@ export async function createApp() {
   app.use(
     '/graphql',
     expressMiddleware(server, {
-      context: async ({ req, res }) => ({ req, res }),
+      context: async ({ req, res }): Promise<GatewayContext> => {
+        const ctx: GatewayContext = { req, res };
+
+        // Attempt to resolve user from session cookie (non-blocking for login/logout)
+        if (req.headers.cookie) {
+          try {
+            const response = await fetch(getModuleUrl('siteNetwork'), {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                cookie: req.headers.cookie,
+              },
+              body: JSON.stringify({ query: '{ me { id email role } }' }),
+            });
+            const body = await response.json() as { data?: { me?: { id: string; email: string; role: string } } };
+            if (body.data?.me) {
+              ctx.user = { id: body.data.me.id, email: body.data.me.email, role: body.data.me.role as Role };
+            }
+          } catch {
+            // Session resolution failed — proceed unauthenticated
+          }
+        }
+
+        return ctx;
+      },
     }),
   );
 
