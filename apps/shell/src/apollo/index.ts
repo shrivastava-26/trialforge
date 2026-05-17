@@ -1,2 +1,1 @@
-export { authClient } from './authClient';
-export { reportingClient, setEnqueueError } from './reportingClient';
+export { gatewayClient, setEnqueueError } from './gatewayClient';

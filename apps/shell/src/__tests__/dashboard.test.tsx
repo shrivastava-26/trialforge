@@ -27,7 +27,7 @@ vi.mock('../auth', () => ({
 const mockQuery = vi.fn();
 
 vi.mock('../apollo', () => ({
-  reportingClient: { query: (...args: unknown[]) => mockQuery(...args) },
+  gatewayClient: { query: (...args: unknown[]) => mockQuery(...args) },
   setEnqueueError: vi.fn(),
 }));
 

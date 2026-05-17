@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { gql } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { authClient } from '../apollo';
+import { gatewayClient } from '../apollo';
 import type { RoleName } from './roles';
 
 const ME_QUERY = gql`
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (hasFetched.current) return;
     hasFetched.current = true;
 
-    authClient
+    gatewayClient
       .query({ query: ME_QUERY, fetchPolicy: 'network-only' })
       .then(({ data }) => {
         if (data?.me) {
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const { data } = await authClient.mutate({
+      const { data } = await gatewayClient.mutate({
         mutation: LOGIN_MUTATION,
         variables: { email, password },
       });
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    await authClient.mutate({ mutation: LOGOUT_MUTATION });
+    await gatewayClient.mutate({ mutation: LOGOUT_MUTATION });
     setState({ isLoggedIn: false, email: null, roles: [], loading: false });
     navigate('/login');
   }, [navigate]);

@@ -7,16 +7,11 @@ import {
   gql,
 } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
-import { authClient } from './authClient';
 
 export let enqueueError: (msg: string) => void = () => {};
 export function setEnqueueError(fn: (msg: string) => void) {
   enqueueError = fn;
 }
-
-// Shared with authClient to prevent concurrent refresh attempts
-let isRefreshing = false;
-let pendingRetries: Array<() => void> = [];
 
 const REFRESH_SESSION = gql`
   mutation RefreshSession {
@@ -24,17 +19,16 @@ const REFRESH_SESSION = gql`
   }
 `;
 
-function resolvePending() {
-  pendingRetries.forEach((cb) => cb());
-  pendingRetries = [];
-}
+let isRefreshing = false;
+let pendingRequests: Array<() => void> = [];
 
-function failPending() {
-  pendingRetries = [];
+function resolvePending() {
+  pendingRequests.forEach((cb) => cb());
+  pendingRequests = [];
 }
 
 const httpLink = new HttpLink({
-  uri: import.meta.env.VITE_REPORTING_GRAPHQL_URL,
+  uri: import.meta.env.VITE_GATEWAY_GRAPHQL_URL,
   credentials: 'include',
 });
 
@@ -45,21 +39,23 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
 
   if (!isUnauthenticated) {
     const msg =
-      graphQLErrors?.[0]?.message ?? networkError?.message ?? 'Request failed';
-    enqueueError(msg);
+      graphQLErrors?.[0]?.message ?? networkError?.message;
+    if (msg) enqueueError(msg);
     return;
   }
 
+  // Prevent infinite loop on refreshSession itself
+  if (operation.operationName === 'RefreshSession') return;
+
   if (import.meta.env.DEV) {
     console.warn(
-      `[reportingClient] UNAUTHENTICATED on operation: ${operation.operationName ?? 'unknown'}`,
+      `[gatewayClient] UNAUTHENTICATED on operation: ${operation.operationName ?? 'unknown'}, attempting refresh`,
     );
   }
 
-  // If already refreshing, queue this retry
   if (isRefreshing) {
     return new Observable((observer) => {
-      pendingRetries.push(() => {
+      pendingRequests.push(() => {
         forward(operation).subscribe(observer);
       });
     });
@@ -68,23 +64,18 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
   isRefreshing = true;
 
   return new Observable((observer) => {
-    authClient
+    gatewayClient
       .mutate({ mutation: REFRESH_SESSION })
       .then(({ data }) => {
         if (!data?.refreshSession) {
           throw new Error('Refresh failed');
         }
         resolvePending();
-        // Retry the original reporting operation once
         forward(operation).subscribe(observer);
       })
       .catch(() => {
-        failPending();
-        observer.complete();
-        if (import.meta.env.DEV) {
-          console.warn('[reportingClient] Refresh failed, redirecting to /login');
-        }
-        window.location.href = '/login';
+        pendingRequests = [];
+        observer.error(new Error('Session expired'));
       })
       .finally(() => {
         isRefreshing = false;
@@ -92,7 +83,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
   });
 });
 
-export const reportingClient = new ApolloClient({
+export const gatewayClient = new ApolloClient({
   link: from([errorLink, httpLink]),
   cache: new InMemoryCache(),
   defaultOptions: {
