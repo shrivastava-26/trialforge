@@ -226,3 +226,13 @@ export function archivePatientVisit(id: number): PatientVisit {
   visitRepo.updateStatus(id, 'ARCHIVED');
   return toVisit(visitRepo.findById(id)!);
 }
+
+export function getPatientVisitsFiltered(
+  studySubjectId: number,
+  page: number,
+  pageSize: number,
+  status?: string
+): { rows: PatientVisit[]; total: number } {
+  const { rows, total } = visitRepo.findByStudySubjectIdFiltered(studySubjectId, page, pageSize, status);
+  return { rows: rows.map(toVisit), total };
+}

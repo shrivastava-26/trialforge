@@ -47,3 +47,25 @@ export function setCompleted(id: number, completedDate: string): void {
     [completedDate, id]
   );
 }
+
+export function findByStudySubjectIdFiltered(
+  studySubjectId: number,
+  page: number,
+  pageSize: number,
+  status?: string
+): { rows: TfPatientVisitRow[]; total: number } {
+  const offset = (page - 1) * pageSize;
+  const where = status
+    ? 'WHERE study_subject_id = ? AND status = ?'
+    : 'WHERE study_subject_id = ?';
+  const params = status ? [studySubjectId, status] : [studySubjectId];
+  const countRow = queryOne<{ cnt: number }>(
+    `SELECT COUNT(*) as cnt FROM tf_patient_visits ${where}`,
+    params
+  );
+  const rows = queryAll<TfPatientVisitRow>(
+    `SELECT * FROM tf_patient_visits ${where} ORDER BY scheduled_date ASC LIMIT ? OFFSET ?`,
+    [...params, pageSize, offset]
+  );
+  return { rows, total: countRow?.cnt ?? 0 };
+}

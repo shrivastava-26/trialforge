@@ -63,4 +63,24 @@ describe('Federation subgraph schemas', () => {
     expect(sdl).toContain('type Study');
     expect(sdl).toContain('@external');
   });
+
+  it('visit-scheduling subgraph schema builds and exposes _service SDL', async () => {
+    const { schema } = await import(
+      '../../../visit-scheduling/backend/src/federation/schema'
+    ) as { schema: import('graphql').GraphQLSchema };
+
+    const result = await graphql({
+      schema,
+      source: '{ _service { sdl } }',
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?._service).toBeDefined();
+    const sdl = (result.data!._service as { sdl: string }).sdl;
+    expect(sdl).toContain('@key');
+    expect(sdl).toContain('type VisitTemplate');
+    expect(sdl).toContain('type PatientVisit');
+    expect(sdl).toContain('type StudySubject');
+    expect(sdl).toContain('@external');
+  });
 });
