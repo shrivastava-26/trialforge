@@ -69,6 +69,24 @@ npm run dev:reporting:backend
 npm run dev:shell
 ```
 
+### GraphQL Gateway (Phase 1.1)
+
+The gateway provides a single GraphQL endpoint at port 4200 that proxies auth and reporting operations to their respective backends. The shell currently still uses two direct clients; migration to the gateway endpoint will happen in Phase 1.2.
+
+```bash
+# Copy env template
+cp modules/gateway/backend/.env.example modules/gateway/backend/.env
+
+# Start gateway (requires site-network + reporting backends running)
+npm run dev:gateway
+
+# Run tests
+npm run test:gateway
+
+# Build
+npm run build:gateway
+```
+
 ## Running Tests
 
 ```bash
