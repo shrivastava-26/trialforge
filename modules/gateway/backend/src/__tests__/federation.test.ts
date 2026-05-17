@@ -122,4 +122,24 @@ describe('Federation subgraph schemas', () => {
     expect(sdl).toContain('type FormInstance');
     expect(sdl).toContain('@external');
   });
+
+  it('document-management subgraph schema builds and exposes _service SDL', async () => {
+    const { schema } = await import(
+      '../../../document-management/backend/src/federation/schema'
+    ) as { schema: import('graphql').GraphQLSchema };
+
+    const result = await graphql({
+      schema,
+      source: '{ _service { sdl } }',
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?._service).toBeDefined();
+    const sdl = (result.data!._service as { sdl: string }).sdl;
+    expect(sdl).toContain('@key');
+    expect(sdl).toContain('type Document');
+    expect(sdl).toContain('type DocumentVersion');
+    expect(sdl).toContain('type Study');
+    expect(sdl).toContain('@external');
+  });
 });
