@@ -11,7 +11,7 @@ import {
   Alert,
   Grid,
 } from '@mui/material';
-import { reportingClient } from '../apollo';
+import { gatewayClient } from '../apollo';
 import { useAuth, ROLES } from '../auth';
 
 export const GET_DASHBOARD_METRICS = gql`
@@ -70,7 +70,7 @@ export function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await reportingClient.query({
+      const { data } = await gatewayClient.query({
         query: GET_DASHBOARD_METRICS,
         variables: {
           studyId: studyId.trim() || undefined,
