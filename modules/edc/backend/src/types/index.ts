@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { JwtPayload as SharedJwtPayload } from '@trialforge/shared-auth';
 
 export type FormInstanceStatus = 'DRAFT' | 'SUBMITTED' | 'ARCHIVED';
 export type FieldType = 'TEXT' | 'NUMBER' | 'DATE' | 'DROPDOWN' | 'RADIO' | 'CHECKBOX' | 'TEXTAREA';
@@ -68,12 +69,14 @@ export interface TfFormFieldRow {
   display_order: number;
 }
 
-export interface JwtPayload {
+/**
+ * EDC-specific JwtPayload extends shared-auth's base type with userId.
+ * Supports both `role` (single) and `roles` (array) via shared-auth normalizeRoles.
+ */
+export interface JwtPayload extends SharedJwtPayload {
   userId: number;
-  email: string;
   roles: RoleName[];
 }
-
 export interface GraphQLContext {
   user: JwtPayload | null;
   req: Request;
