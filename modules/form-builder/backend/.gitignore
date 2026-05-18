@@ -3,3 +3,5 @@ dist/
 data/
 *.db
 .env.local
+server_err.txt
+server_out.txt

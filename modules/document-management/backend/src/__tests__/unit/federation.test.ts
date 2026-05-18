@@ -178,7 +178,7 @@ describe('document-management federation schema', () => {
   });
 
   it('works when JWT has only role (string) instead of roles array', async () => {
-    const userWithSingleRole = { userId: 2, email: 'mgr@trialforge.io', role: 'CRO_MANAGER' } as any;
+    const userWithSingleRole = { id: '2', userId: 2, email: 'mgr@trialforge.io', role: 'CRO_MANAGER' } as any;
     const result = await server.executeOperation(
       {
         query: STUDY_DOCUMENTS,

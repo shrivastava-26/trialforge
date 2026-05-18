@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { JwtPayload as SharedJwtPayload } from '@trialforge/shared-auth';
 
 export type DocumentStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 export type VersionStatus = 'ACTIVE' | 'SUPERSEDED' | 'ARCHIVED';
@@ -31,12 +32,7 @@ export interface TfDocumentVersionRow {
   created_at: string;
 }
 
-export interface JwtPayload {
-  userId: number;
-  email: string;
-  role?: RoleName;
-  roles?: RoleName[];
-}
+export type JwtPayload = SharedJwtPayload & { userId?: number };
 
 export interface GraphQLContext {
   user: JwtPayload | null;
