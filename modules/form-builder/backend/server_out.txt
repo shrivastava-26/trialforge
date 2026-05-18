@@ -1,6 +1,0 @@
-(node:22556) ExperimentalWarning: CommonJS module C:\Program Files\nodejs\node_modules\npm\node_modules\debug\src\node.js is loading ES Module C:\Program Files\nodejs\node_modules\npm\node_modules\supports-color\index.js using require().
-Support for loading ES Module in require() is an experimental feature and might change at any time
-(Use `node --trace-warnings ...` to show where the warning was created)
-[INFO] 12:55:43 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.9.3)
-Enabling inline tracing for this subgraph. To disable, use ApolloServerPluginInlineTraceDisabled.
-[form-builder] Federation subgraph at http://localhost:4171/graphql

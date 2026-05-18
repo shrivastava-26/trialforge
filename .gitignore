@@ -27,3 +27,10 @@ playwright-report/
 # TypeScript build cache
 *.tsbuildinfo
 **/*.tsbuildinfo
+
+
+# Generated server logs
+**/server_out.txt
+**/server_err.txt
+**/*_out.txt
+**/*_err.txt
