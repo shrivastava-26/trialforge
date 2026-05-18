@@ -16,7 +16,7 @@ function makeContext(roles: RoleName[] | null): GraphQLContext {
 describe('RBAC helpers — visit-scheduling', () => {
   describe('requireAuth', () => {
     it('throws UNAUTHENTICATED when no user', () => {
-      expect(() => requireAuth(makeContext(null))).toThrow(/Unauthorized/);
+      expect(() => requireAuth(makeContext(null))).toThrow(/Not authenticated/);
     });
   });
 
