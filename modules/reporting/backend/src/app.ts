@@ -15,16 +15,17 @@ const SHELL_ORIGIN = process.env.SHELL_ORIGIN ?? 'http://localhost:5173';
 function verifyToken(token: string): JwtPayload | null {
   try {
     const payload = jwt.verify(token, JWT_SECRET) as Record<string, unknown>;
-    const roles: JwtPayload['roles'] =
+    const id = String(payload.userId ?? payload.id ?? '');
+    const roles: string[] =
       Array.isArray(payload.roles)
         ? payload.roles
         : payload.role
-          ? [payload.role as JwtPayload['roles'][number]]
+          ? [payload.role as string]
           : [];
     return {
-      userId: payload.userId as number,
+      id,
       email: payload.email as string,
-      role: (payload.role as JwtPayload['role']) ?? roles[0],
+      role: (payload.role as string) ?? roles[0],
       roles,
     };
   } catch {

@@ -7,7 +7,7 @@ function makeContext(roles: RoleName[] | null): GraphQLContext {
     return { user: null, req: {} as any, res: {} as any };
   }
   return {
-    user: { userId: 1, email: 'test@trialforge.io', roles },
+    user: { id: '1', email: 'test@trialforge.io', roles },
     req: {} as any,
     res: {} as any,
   };
@@ -17,7 +17,7 @@ const READ_ROLES: RoleName[] = ['ADMIN', 'CRO_MANAGER', 'SITE_COORDINATOR', 'DAT
 
 describe('RBAC helpers — reporting', () => {
   it('throws UNAUTHENTICATED when no user', () => {
-    expect(() => requireAuth(makeContext(null))).toThrow(/Unauthorized/);
+    expect(() => requireAuth(makeContext(null))).toThrow(/Not authenticated/);
   });
 
   for (const role of READ_ROLES) {
@@ -28,7 +28,7 @@ describe('RBAC helpers — reporting', () => {
 
   it('does not crash when user.roles is undefined', () => {
     const ctx: GraphQLContext = {
-      user: { userId: 1, email: 'test@trialforge.io', roles: undefined as any },
+      user: { id: '1', email: 'test@trialforge.io', roles: undefined as any },
       req: {} as any,
       res: {} as any,
     };
