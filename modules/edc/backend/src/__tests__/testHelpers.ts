@@ -9,6 +9,7 @@ export function setupTestDb(): void {
 
 export function mockUser(overrides?: Partial<JwtPayload>): JwtPayload {
   return {
+    id: '1',
     userId: 1,
     email: 'admin@trialforge.io',
     roles: ['ADMIN'] as RoleName[],

@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import * as edcService from '../services/edcService';
-import { requireAnyRole } from '../graphql/resolvers/helpers';
+import { requireAnyRole } from '@trialforge/shared-auth';
 import { GraphQLContext } from '../types';
 
 const READ_ROLES = ['ADMIN', 'CRO_MANAGER', 'SITE_COORDINATOR', 'DATA_MANAGER', 'AUDITOR'] as const;
