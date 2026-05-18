@@ -1,4 +1,7 @@
 import { Request, Response } from 'express';
+import { JwtPayload } from '@trialforge/shared-auth';
+
+export type { JwtPayload } from '@trialforge/shared-auth';
 
 export type PatientStatus = 'SCREENED' | 'ELIGIBLE' | 'ENROLLED' | 'WITHDRAWN' | 'COMPLETED' | 'ARCHIVED';
 
@@ -25,12 +28,6 @@ export interface TfStudySubjectRow {
   patient_id: number;
   status: PatientStatus;
   assigned_at: string;
-}
-
-export interface JwtPayload {
-  userId: number;
-  email: string;
-  roles: RoleName[];
 }
 
 export interface GraphQLContext {

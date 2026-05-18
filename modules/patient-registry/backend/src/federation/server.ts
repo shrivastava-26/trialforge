@@ -13,7 +13,8 @@ import jwt from 'jsonwebtoken';
 import { schema } from './schema';
 import { initConnection } from '../db/connection';
 import { initDb } from '../db/migrate';
-import { GraphQLContext, JwtPayload } from '../types';
+import { GraphQLContext } from '../types';
+import type { JwtPayload } from '@trialforge/shared-auth';
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'trialforge-dev-secret';
 

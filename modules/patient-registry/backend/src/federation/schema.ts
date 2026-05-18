@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 import { buildSubgraphSchema } from '@apollo/subgraph';
+import { requireAuth } from '@trialforge/shared-auth';
 import * as patientService from '../services/patientService';
-import { requireAuth } from '../graphql/resolvers/helpers';
 import { GraphQLContext } from '../types';
 
 const typeDefs = gql`
