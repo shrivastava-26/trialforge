@@ -2,8 +2,14 @@
   "name": "trialforge",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.9.0",
   "description": "TrialForge — modular clinical-trial management platform",
+  "workspaces": [
+    "modules/*/backend",
+    "packages/*"
+  ],
   "scripts": {
+    "dev:all": "turbo run dev:federation --concurrency 15",
     "dev": "echo \"TrialForge Dev Commands:\" && echo \"  npm run dev:site-network:frontend  — Start SNA frontend\" && echo \"  npm run dev:site-network:backend   — Start SNA backend\" && echo \"  npm run test:site-network           — Run all SNA tests\" && echo \"  npm run e2e:site-network            — Run SNA Playwright e2e\"",
     "dev:site-network:frontend": "cd modules/site-network/frontend && npm install && npm run dev",
     "dev:site-network:backend": "cd modules/site-network/backend && npm install && npm run dev",
@@ -42,5 +48,8 @@
     "test:shell": "cd apps/shell && npm install && npm test"
   },
   "keywords": ["clinical-trial", "ctms", "graphql", "react", "typescript"],
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  }
 }
