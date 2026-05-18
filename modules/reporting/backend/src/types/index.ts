@@ -1,4 +1,7 @@
 import { Request, Response } from 'express';
+import { JwtPayload } from '@trialforge/shared-auth';
+
+export type { JwtPayload };
 
 export type RoleName =
   | 'ADMIN'
@@ -29,13 +32,6 @@ export interface DashboardMetrics {
 export interface MetricsFilter {
   studyId?: string;
   siteId?: string;
-}
-
-export interface JwtPayload {
-  userId: number;
-  email: string;
-  role?: RoleName;
-  roles: RoleName[];
 }
 
 export interface GraphQLContext {

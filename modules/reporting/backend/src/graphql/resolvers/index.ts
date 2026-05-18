@@ -1,10 +1,11 @@
-import { GraphQLContext } from '../../types';
+import { normalizeRoles } from '@trialforge/shared-auth';
+import { GraphQLContext, RoleName } from '../../types';
 import { requireAnyRole } from './helpers';
 import { parseOrThrow } from '../../validation/helpers';
 import { metricsFilterSchema } from '../../validation/schemas';
 import * as metricsService from '../../services/metricsService';
 
-const READ_ROLES = ['ADMIN', 'CRO_MANAGER', 'SITE_COORDINATOR', 'DATA_MANAGER', 'MONITOR', 'AUDITOR'] as const;
+const READ_ROLES: RoleName[] = ['ADMIN', 'CRO_MANAGER', 'SITE_COORDINATOR', 'DATA_MANAGER', 'MONITOR', 'AUDITOR'];
 
 export const resolvers = {
   Query: {
@@ -13,9 +14,9 @@ export const resolvers = {
       args: { studyId?: string; siteId?: string },
       context: GraphQLContext
     ) => {
-      requireAnyRole(context, [...READ_ROLES]);
+      requireAnyRole(context, READ_ROLES);
       const filter = parseOrThrow(metricsFilterSchema, { studyId: args.studyId, siteId: args.siteId });
-      const userRoles = context.user!.roles ?? [];
+      const userRoles = normalizeRoles(context.user) as RoleName[];
       return metricsService.getDashboardMetrics(filter, userRoles);
     },
   },
@@ -28,9 +29,9 @@ export const resolvers = {
       args: { studyId?: string; siteId?: string },
       context: GraphQLContext
     ) {
-      requireAnyRole(context, [...READ_ROLES]);
+      requireAnyRole(context, READ_ROLES);
       const filter = parseOrThrow(metricsFilterSchema, { studyId: args.studyId, siteId: args.siteId });
-      const userRoles = context.user!.roles ?? [];
+      const userRoles = normalizeRoles(context.user) as RoleName[];
       return metricsService.getDashboardMetrics(filter, userRoles);
     },
   },
@@ -43,9 +44,9 @@ export const resolvers = {
       args: { siteId?: string },
       context: GraphQLContext
     ) {
-      requireAnyRole(context, [...READ_ROLES]);
+      requireAnyRole(context, READ_ROLES);
       const filter = parseOrThrow(metricsFilterSchema, { studyId: parent.id, siteId: args.siteId });
-      const userRoles = context.user!.roles ?? [];
+      const userRoles = normalizeRoles(context.user) as RoleName[];
       return metricsService.getDashboardMetrics(filter, userRoles);
     },
   },

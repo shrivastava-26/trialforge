@@ -5,7 +5,7 @@ import type { GraphQLContext } from '../../types';
 
 function makeContext(roles: string[] = ['ADMIN']): GraphQLContext {
   return {
-    user: mockUser({ roles: roles as any }),
+    user: mockUser({ roles }),
     req: {} as any,
     res: {} as any,
   };
@@ -66,11 +66,11 @@ describe('Study.metrics resolver', () => {
   it('enforces RBAC — unauthenticated throws UNAUTHENTICATED', () => {
     const ctx: GraphQLContext = { user: null, req: {} as any, res: {} as any };
 
-    expect(() => resolvers.Study.metrics({ id: 'STUDY-001' }, {}, ctx)).toThrow(/Unauthorized/);
+    expect(() => resolvers.Study.metrics({ id: 'STUDY-001' }, {}, ctx)).toThrow(/Not authenticated/);
   });
 
   it('enforces RBAC — unauthorized role throws FORBIDDEN', () => {
-    const ctx = makeContext(['UNKNOWN_ROLE' as any]);
+    const ctx = makeContext(['UNKNOWN_ROLE']);
 
     expect(() => resolvers.Study.metrics({ id: 'STUDY-001' }, {}, ctx)).toThrow(/Forbidden/);
   });
