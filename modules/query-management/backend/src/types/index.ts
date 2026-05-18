@@ -46,4 +46,5 @@ export interface GraphQLContext extends AuthContext {
   user: JwtPayload | null;
   req: Request;
   res: Response;
+  requestId: string;
 }

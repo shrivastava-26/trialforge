@@ -4,7 +4,7 @@ import type { GatewayContext, Role } from '../types';
 import type { Request, Response } from 'express';
 
 function makeCtx(user?: { id: string; email: string; role: Role }): GatewayContext {
-  return { req: {} as Request, res: {} as Response, user };
+  return { req: {} as Request, res: {} as Response, requestId: 'test-id', user };
 }
 
 describe('authService', () => {

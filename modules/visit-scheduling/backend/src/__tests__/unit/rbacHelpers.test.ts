@@ -4,12 +4,13 @@ import { GraphQLContext, RoleName } from '../../types';
 
 function makeContext(roles: RoleName[] | null): GraphQLContext {
   if (roles === null) {
-    return { user: null, req: {} as any, res: {} as any };
+    return { user: null, req: {} as any, res: {} as any, requestId: 'test-id' };
   }
   return {
     user: { userId: 1, email: 'test@trialforge.io', roles },
     req: {} as any,
     res: {} as any,
+    requestId: 'test-id',
   };
 }
 
