@@ -13,13 +13,15 @@ import jwt from 'jsonwebtoken';
 import { schema } from './schema';
 import { initConnection } from '../db/connection';
 import { initDb } from '../db/migrate';
-import { GraphQLContext, JwtPayload } from '../types';
+import { GraphQLContext } from '../types';
+import type { JwtPayload } from '@trialforge/shared-auth';
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'trialforge-dev-secret';
 
 function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    return { id: String(decoded.userId ?? decoded.id), email: decoded.email, roles: decoded.roles };
   } catch {
     return null;
   }

@@ -1,6 +1,6 @@
 import { initConnection } from '../db/connection';
 import { initDb } from '../db/migrate';
-import { JwtPayload, RoleName } from '../types';
+import type { JwtPayload } from '@trialforge/shared-auth';
 
 export function setupTestDb(): void {
   initConnection(':memory:');
@@ -9,9 +9,9 @@ export function setupTestDb(): void {
 
 export function mockUser(overrides?: Partial<JwtPayload>): JwtPayload {
   return {
-    userId: 1,
+    id: '1',
     email: 'admin@trialforge.io',
-    roles: ['ADMIN'] as RoleName[],
+    roles: ['ADMIN'],
     ...overrides,
   };
 }

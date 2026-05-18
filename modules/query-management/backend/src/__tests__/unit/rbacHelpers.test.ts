@@ -1,24 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import { requireAuth, requireRole, requireAnyRole } from '../../graphql/resolvers/helpers';
-import { GraphQLContext, RoleName } from '../../types';
+import { GraphQLContext } from '../../types';
 
-function makeContext(roles: RoleName[] | null): GraphQLContext {
+function makeContext(roles: string[] | null): GraphQLContext {
   if (roles === null) {
     return { user: null, req: {} as any, res: {} as any };
   }
   return {
-    user: { userId: 1, email: 'test@trialforge.io', roles },
+    user: { id: '1', email: 'test@trialforge.io', roles },
     req: {} as any,
     res: {} as any,
   };
 }
 
-const READ_ROLES: RoleName[] = ['ADMIN', 'CRO_MANAGER', 'SITE_COORDINATOR', 'DATA_MANAGER', 'AUDITOR'];
+const READ_ROLES = ['ADMIN', 'CRO_MANAGER', 'SITE_COORDINATOR', 'DATA_MANAGER', 'AUDITOR'];
 
 describe('RBAC helpers — query-management', () => {
   describe('requireAuth', () => {
     it('throws UNAUTHENTICATED when no user', () => {
-      expect(() => requireAuth(makeContext(null))).toThrow(/Unauthorized/);
+      expect(() => requireAuth(makeContext(null))).toThrow(/Not authenticated/);
     });
   });
 

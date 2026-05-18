@@ -6,14 +6,16 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs } from './graphql/schema';
 import { resolvers } from './graphql/resolvers';
-import { GraphQLContext, JwtPayload } from './types';
+import { GraphQLContext } from './types';
+import type { JwtPayload } from '@trialforge/shared-auth';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'trialforge-dev-secret';
 
 function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    return { id: String(decoded.userId ?? decoded.id), email: decoded.email, roles: decoded.roles };
   } catch {
     return null;
   }

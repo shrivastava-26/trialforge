@@ -1,4 +1,7 @@
 import { Request, Response } from 'express';
+import type { JwtPayload, AuthContext } from '@trialforge/shared-auth';
+
+export type { JwtPayload };
 
 export type QueryStatus = 'OPEN' | 'ANSWERED' | 'CLOSED' | 'ARCHIVED';
 export type MessageAuthorRole = 'DATA_MANAGER' | 'SITE_COORDINATOR' | 'ADMIN';
@@ -39,13 +42,7 @@ export interface TfFormInstanceRow {
   updated_at: string;
 }
 
-export interface JwtPayload {
-  userId: number;
-  email: string;
-  roles: RoleName[];
-}
-
-export interface GraphQLContext {
+export interface GraphQLContext extends AuthContext {
   user: JwtPayload | null;
   req: Request;
   res: Response;
