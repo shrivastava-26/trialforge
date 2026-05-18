@@ -8,6 +8,7 @@ function makeContext(roles: string[] = ['ADMIN']): GraphQLContext {
     user: mockUser({ roles }),
     req: {} as any,
     res: {} as any,
+    requestId: 'test-id',
   };
 }
 
@@ -64,7 +65,7 @@ describe('Study.metrics resolver', () => {
   });
 
   it('enforces RBAC — unauthenticated throws UNAUTHENTICATED', () => {
-    const ctx: GraphQLContext = { user: null, req: {} as any, res: {} as any };
+    const ctx: GraphQLContext = { user: null, req: {} as any, res: {} as any, requestId: 'test-id' };
 
     expect(() => resolvers.Study.metrics({ id: 'STUDY-001' }, {}, ctx)).toThrow(/Not authenticated/);
   });

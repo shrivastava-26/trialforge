@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import { randomUUID } from 'crypto';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs } from './graphql/schema';
@@ -56,7 +57,8 @@ export async function createApp() {
     '/graphql',
     expressMiddleware(server, {
       context: async ({ req, res }): Promise<GatewayContext> => {
-        const ctx: GatewayContext = { req, res };
+        const requestId = (req.headers['x-request-id'] as string) || randomUUID();
+        const ctx: GatewayContext = { req, res, requestId };
 
         // Attempt to resolve user from session cookie (non-blocking for login/logout)
         if (req.headers.cookie) {

@@ -9,6 +9,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
+import type { ApolloServerPlugin } from '@apollo/server';
 import jwt from 'jsonwebtoken';
 import { schema } from './schema';
 import { initConnection } from '../db/connection';
@@ -39,7 +40,32 @@ async function start() {
     res.json({ status: 'ok', module: 'visit-scheduling-subgraph' });
   });
 
-  const server = new ApolloServer<GraphQLContext>({ schema });
+  const loggingPlugin: ApolloServerPlugin<GraphQLContext> = {
+    async requestDidStart({ request, contextValue }) {
+      const start = Date.now();
+      return {
+        async didEncounterErrors({ errors }) {
+          for (const err of errors) {
+            if (!err.extensions) (err as any).extensions = {};
+            (err.extensions as any).requestId = contextValue.requestId;
+          }
+        },
+        async willSendResponse() {
+          console.log(JSON.stringify({
+            service: 'visit-scheduling',
+            requestId: contextValue.requestId,
+            operationName: request.operationName ?? 'anonymous',
+            durationMs: Date.now() - start,
+          }));
+        },
+      };
+    },
+  };
+
+  const server = new ApolloServer<GraphQLContext>({
+    schema,
+    plugins: [loggingPlugin],
+  });
   await server.start();
 
   app.use(
@@ -48,7 +74,8 @@ async function start() {
       context: async ({ req, res }): Promise<GraphQLContext> => {
         const token = req.cookies?.auth_token as string | undefined;
         const user = token ? verifyToken(token) : null;
-        return { user, req, res };
+        const requestId = (req.headers['x-request-id'] as string) ?? '';
+        return { user, req, res, requestId };
       },
     }),
   );

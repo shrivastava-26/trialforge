@@ -5,6 +5,7 @@ export type Role = 'ADMIN' | 'STUDY_MANAGER' | 'SITE_COORDINATOR';
 export interface GatewayContext {
   req: Request;
   res: Response;
+  requestId: string;
   user?: { id: string; email: string; role: Role };
 }
 

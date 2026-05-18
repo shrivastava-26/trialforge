@@ -5,11 +5,11 @@ import { schema } from '../../federation/schema';
 import { GraphQLContext } from '../../types';
 
 function makeContext(user = mockUser()): GraphQLContext {
-  return { user, req: {} as any, res: {} as any };
+  return { user, req: {} as any, res: {} as any, requestId: 'test-id' };
 }
 
 function noAuthContext(): GraphQLContext {
-  return { user: null, req: {} as any, res: {} as any };
+  return { user: null, req: {} as any, res: {} as any, requestId: 'test-id' };
 }
 
 beforeAll(() => {
@@ -147,7 +147,7 @@ describe('form-builder federation resolvers', () => {
             }
           }
         `,
-        contextValue: { user, req: {} as any, res: {} as any },
+        contextValue: { user, req: {} as any, res: {} as any, requestId: 'test-id' },
       });
 
       expect(result.errors).toBeUndefined();

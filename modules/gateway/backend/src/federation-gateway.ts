@@ -16,14 +16,19 @@
  *   - document-management on http://localhost:4181/graphql
  */
 import 'dotenv/config';
+import { randomUUID } from 'crypto';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloGateway, IntrospectAndCompose, RemoteGraphQLDataSource } from '@apollo/gateway';
+import type { ApolloServerPlugin } from '@apollo/server';
 class AuthenticatedDataSource extends RemoteGraphQLDataSource {
   override willSendRequest({ request, context }: any) {
+    if (context.requestId) {
+      request.http.headers.set('x-request-id', context.requestId);
+    }
     if (context.req?.headers?.cookie) {
       request.http.headers.set('cookie', context.req.headers.cookie);
     }
@@ -91,7 +96,34 @@ async function start() {
     },
   });
 
-  const server = new ApolloServer({ gateway, introspection: true });
+  const loggingPlugin: ApolloServerPlugin = {
+    async requestDidStart({ request, contextValue }: any) {
+      const start = Date.now();
+      const requestId = contextValue.requestId;
+      return {
+        async didEncounterErrors({ errors }: any) {
+          for (const err of errors) {
+            if (!err.extensions) err.extensions = {};
+            err.extensions.requestId = requestId;
+          }
+        },
+        async willSendResponse() {
+          console.log(JSON.stringify({
+            service: 'federation-gateway',
+            requestId,
+            operationName: request.operationName ?? 'anonymous',
+            durationMs: Date.now() - start,
+          }));
+        },
+      };
+    },
+  };
+
+  const server = new ApolloServer({
+    gateway,
+    introspection: true,
+    plugins: [loggingPlugin],
+  });
   await server.start();
 
   const app = express();
@@ -106,7 +138,10 @@ async function start() {
   app.use(
     '/graphql',
     expressMiddleware(server, {
-      context: async ({ req, res }) => ({ req, res }),
+      context: async ({ req, res }) => {
+        const requestId = (req.headers['x-request-id'] as string) || randomUUID();
+        return { req, res, requestId };
+      },
     }),
   );
 

@@ -44,7 +44,7 @@ export async function createApp() {
       context: async ({ req, res }): Promise<GraphQLContext> => {
         const token = req.cookies?.auth_token as string | undefined;
         const user = token ? verifyToken(token) : null;
-        return { user, req, res };
+        return { user, req, res, requestId: (req.headers['x-request-id'] as string) ?? '' };
       },
     })
   );

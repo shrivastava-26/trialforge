@@ -34,6 +34,7 @@ export interface GraphQLContext {
   user: JwtPayload | null;
   req: Request;
   res: Response;
+  requestId: string;
 }
 
 /**

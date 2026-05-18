@@ -4,12 +4,13 @@ import { GraphQLContext, RoleName } from '../../types';
 
 function makeContext(roles: RoleName[] | null): GraphQLContext {
   if (roles === null) {
-    return { user: null, req: {} as any, res: {} as any };
+    return { user: null, req: {} as any, res: {} as any, requestId: 'test-id' };
   }
   return {
     user: { id: '1', email: 'test@trialforge.io', roles },
     req: {} as any,
     res: {} as any,
+    requestId: 'test-id',
   };
 }
 
@@ -31,6 +32,7 @@ describe('RBAC helpers — reporting', () => {
       user: { id: '1', email: 'test@trialforge.io', roles: undefined as any },
       req: {} as any,
       res: {} as any,
+      requestId: 'test-id',
     };
     // Should throw FORBIDDEN (no matching role), not a TypeError
     expect(() => requireAnyRole(ctx, READ_ROLES)).toThrow(/Forbidden/);

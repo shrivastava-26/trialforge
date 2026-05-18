@@ -8,6 +8,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
+import type { ApolloServerPlugin } from '@apollo/server';
 import { schema } from './schema';
 import { initConnection } from '../db/connection';
 import { initDb } from '../db/migrate';
@@ -28,7 +29,32 @@ async function start() {
     res.json({ status: 'ok', module: 'site-network-subgraph' });
   });
 
-  const server = new ApolloServer<GraphQLContext>({ schema });
+  const loggingPlugin: ApolloServerPlugin<GraphQLContext> = {
+    async requestDidStart({ request, contextValue }) {
+      const start = Date.now();
+      return {
+        async didEncounterErrors({ errors }) {
+          for (const err of errors) {
+            if (!err.extensions) (err as any).extensions = {};
+            (err.extensions as any).requestId = contextValue.requestId;
+          }
+        },
+        async willSendResponse() {
+          console.log(JSON.stringify({
+            service: 'site-network',
+            requestId: contextValue.requestId,
+            operationName: request.operationName ?? 'anonymous',
+            durationMs: Date.now() - start,
+          }));
+        },
+      };
+    },
+  };
+
+  const server = new ApolloServer<GraphQLContext>({
+    schema,
+    plugins: [loggingPlugin],
+  });
   await server.start();
 
   app.use(
