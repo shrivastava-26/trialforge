@@ -7,7 +7,7 @@ function makeContext(roles: RoleName[] | null): GraphQLContext {
     return { user: null, req: {} as any, res: {} as any };
   }
   return {
-    user: { userId: 1, email: 'test@trialforge.io', roles },
+    user: { id: '1', userId: 1, email: 'test@trialforge.io', roles },
     req: {} as any,
     res: {} as any,
   };
@@ -19,7 +19,7 @@ const WRITE_ROLES: RoleName[] = ['CRO_MANAGER', 'ADMIN'];
 describe('RBAC helpers — document-management', () => {
   describe('requireAuth', () => {
     it('throws UNAUTHENTICATED when no user', () => {
-      expect(() => requireAuth(makeContext(null))).toThrow(/Unauthorized/);
+      expect(() => requireAuth(makeContext(null))).toThrow(/Not authenticated/);
     });
   });
 
