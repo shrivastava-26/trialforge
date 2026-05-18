@@ -6,7 +6,8 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs } from './graphql/schema';
 import { resolvers } from './graphql/resolvers';
-import { GraphQLContext, JwtPayload } from './types';
+import { GraphQLContext } from './types';
+import type { JwtPayload } from '@trialforge/shared-auth';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'trialforge-dev-secret';

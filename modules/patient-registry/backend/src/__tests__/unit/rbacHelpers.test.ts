@@ -7,7 +7,7 @@ function makeContext(roles: RoleName[] | null): GraphQLContext {
     return { user: null, req: {} as any, res: {} as any };
   }
   return {
-    user: { userId: 1, email: 'test@trialforge.io', roles },
+    user: { id: '1', email: 'test@trialforge.io', roles },
     req: {} as any,
     res: {} as any,
   };
@@ -16,7 +16,7 @@ function makeContext(roles: RoleName[] | null): GraphQLContext {
 describe('RBAC helpers', () => {
   describe('requireAuth', () => {
     it('throws UNAUTHENTICATED when no user', () => {
-      expect(() => requireAuth(makeContext(null))).toThrow(/Unauthorized/);
+      expect(() => requireAuth(makeContext(null))).toThrow(/Not authenticated/);
     });
 
     it('passes when user present', () => {
