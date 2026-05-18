@@ -13,13 +13,21 @@ import jwt from 'jsonwebtoken';
 import { schema } from './schema';
 import { initConnection } from '../db/connection';
 import { initDb } from '../db/migrate';
-import { GraphQLContext, JwtPayload } from '../types';
+import { GraphQLContext } from '../types';
+
+interface TokenPayload {
+  userId?: number;
+  id?: string;
+  email: string;
+  roles?: string[];
+  role?: string;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'trialforge-dev-secret';
 
-function verifyToken(token: string): JwtPayload | null {
+function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload;
+    return jwt.verify(token, JWT_SECRET) as TokenPayload;
   } catch {
     return null;
   }
@@ -49,7 +57,13 @@ async function start() {
         const token = req.cookies?.auth_token as string | undefined;
         const payload = token ? verifyToken(token) : null;
         const user = payload
-          ? { ...payload, roles: payload.roles ?? (payload.role ? [payload.role] : []) as any }
+          ? {
+              id: payload.id ?? String(payload.userId ?? ''),
+              userId: payload.userId,
+              email: payload.email,
+              roles: payload.roles ?? (payload.role ? [payload.role] : []),
+              role: payload.role,
+            }
           : null;
         return { user, req, res };
       },

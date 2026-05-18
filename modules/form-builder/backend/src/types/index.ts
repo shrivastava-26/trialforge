@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { JwtPayload as SharedJwtPayload } from '@trialforge/shared-auth';
 
 export type FormStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 export type FieldType = 'TEXT' | 'NUMBER' | 'DATE' | 'DROPDOWN' | 'RADIO' | 'CHECKBOX' | 'TEXTAREA';
@@ -34,12 +35,7 @@ export interface TfFormFieldRow {
   display_order: number;
 }
 
-export interface JwtPayload {
-  userId: number;
-  email: string;
-  roles: RoleName[];
-  role?: string;
-}
+export type JwtPayload = SharedJwtPayload & { userId?: number };
 
 export interface GraphQLContext {
   user: JwtPayload | null;

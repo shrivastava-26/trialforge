@@ -132,7 +132,7 @@ describe('form-builder federation resolvers', () => {
 
   describe('Study.forms with role-only token (no roles array)', () => {
     it('does not crash when user has only role string', async () => {
-      const user = { userId: 2, email: 'user@test.io', role: 'ADMIN' } as any;
+      const user = { id: '2', userId: 2, email: 'user@test.io', role: 'ADMIN' } as any;
       const result = await graphql({
         schema,
         source: `
