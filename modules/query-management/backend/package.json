@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@trialforge/shared-auth": "file:../../../packages/shared-auth",
     "@apollo/server": "^4.10.0",
     "@apollo/subgraph": "^2.7.0",
     "better-sqlite3": "^12.9.0",

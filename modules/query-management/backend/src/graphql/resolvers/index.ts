@@ -1,5 +1,6 @@
 import { GraphQLContext, MessageAuthorRole } from '../../types';
 import { requireRole, requireAnyRole } from './helpers';
+import { normalizeRoles } from '@trialforge/shared-auth';
 import { parseOrThrow } from '../../validation/helpers';
 import { paginationSchema, createQuerySchema, postMessageSchema } from '../../validation/schemas';
 import * as queryService from '../../services/queryService';
@@ -36,7 +37,7 @@ export const resolvers = {
       const validated = parseOrThrow(postMessageSchema, args);
 
       // Determine author role from user's roles
-      const roles = context.user!.roles;
+      const roles = normalizeRoles(context.user);
       let authorRole: MessageAuthorRole;
       if (roles.includes('DATA_MANAGER')) {
         authorRole = 'DATA_MANAGER';
